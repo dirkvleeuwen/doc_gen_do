@@ -1,3 +1,4 @@
+# VERWIJDEREN
 # instruments/tests.py
 
 # Importeer eerst de benodigde modules
