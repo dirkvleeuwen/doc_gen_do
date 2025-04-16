@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Details indiening: {{ object.subject|truncatechars:30 }}{% endblock %} {# Titel dynamisch gemaakt #}
+
+{% block content %}
+<div class="card mb-4 shadow-sm"> {# Shadow toegevoegd #}
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Flex-wrap en gap #}
+    <h1 class="h5 mb-0">Instrument Details</h1> {# h5 consistentie #}
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'instrument_submission_edit' object.pk %}" class="btn btn-sm btn-outline-primary" title="Bewerken">
+            <i class="bi bi-pencil"></i> Bewerken
+        </a>
+        <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
+            <i class="bi bi-trash"></i> Verwijderen
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
+            <i class="bi bi-download"></i> Download
+        </button>
+        {# Let op de modal target ID hier #}
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
+            <i class="bi bi-envelope"></i> E-mail
+        </button>
+    </div>
+</div>
+    <div class="card-body">
+        {# Message display #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show alert-sm" role="alert"> {# alert-sm #}
+                    {{ message }}
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Sluiten"></button> {# btn-sm #}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h2 class="h6">Preview</h2>
+        <pre class="bg-light p-3 border rounded mb-4" style="white-space: pre-wrap; font-size: 0.85rem;">{{ preview }}</pre> {# font-size kleiner #}
+
+    </div>
+</div>
+
+{# --- Notities Sectie (geen wijzigingen hier) --- #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Notities</h2>
+    </div>
+    <div class="card-body">
+       {# ... (Notities sectie zoals eerder verbeterd) ... #}
+         {% if notes %}
+            <ul class="list-group list-group-flush"> {# list-group-flush voor minder randen binnen de card #}
+                {% for note in notes %}
+                    <li class="list-group-item px-0"> {# px-0 om uitlijning met card body te behouden #}
+                        <div class="d-flex justify-content-between align-items-start">
+                            {# Note metadata #}
+                            <div class="me-3"> {# Marge rechts om ruimte te maken voor knoppen #}
+                                <p class="mb-1">{{ note.text|linebreaksbr }}</p> {# linebreaksbr voor betere flow #}
+                                <small class="text-muted">{{ note.user }} – {{ note.created_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            {# Actieknoppen alleen voor eigenaar #}
+                            {% if note.user == user or user.is_staff %} {# Ook staff mag bewerken/verwijderen? #}
+                            <div class="text-nowrap"> {# Voorkom dat knoppen onder elkaar springen #}
+                                <a href="{% url 'note_edit' note.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Bewerk notitie">
+                                    <i class="bi bi-pencil"></i> {# Bootstrap Icon #}
+                                </a>
+                                <a href="{% url 'note_delete' note.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijder notitie">
+                                    <i class="bi bi-trash"></i> {# Bootstrap Icon #}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">Nog geen notities.</p>
+        {% endif %}
+
+        {# Formulier voor nieuwe notitie #}
+        {% if user.is_authenticated %}
+        <hr class="my-4"> {# Scheidingslijn boven het formulier #}
+        <form method="post" action="{% url 'instrument_submission_detail' object.pk %}" class="mt-3"> {# Action toegevoegd #}
+            {% csrf_token %}
+
+             {# Toon non-field errors bovenaan het formulier #}
+            {% if note_form.non_field_errors %}
+                <div class="alert alert-danger alert-sm">
+                {{ note_form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {# Render het 'text' veld handmatig met widget_tweaks #}
+            {% for field in note_form.visible_fields %}
+                 <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {# Gebruik render_field om class toe te voegen #}
+                    {% render_field field class="form-control form-control-sm" rows="3" %} {# form-control-sm en rows="3" voor compacter #}
+
+                    {% if field.help_text %}
+                        <div class="form-text form-text-sm">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="invalid-feedback d-block"> {# Standaard error weergave #}
+                        {{ field.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {# Verborgen velden indien aanwezig #}
+             {% for field in note_form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-plus-lg"></i> Notitie toevoegen {# Ander icoon + tekst aanpassing #}
+            </button>
+        </form>
+        {% else %}
+            <p class="text-muted mt-3">
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> om notities toe te voegen.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+
+{# === BIJGEWERKTE DYNAMISCHE MODALS === #}
+
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="downloadModalLabel">
+              <i class="bi bi-download me-2"></i>Download Opties
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+        </div>
+        <div class="modal-body">
+          <div class="list-group list-group-flush">
+            {# Loop over opties uit de view #}
+            {% for option in download_export_options %}
+              <a href="{% url option.url_name object.pk %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-3" style="font-size: 1.2rem;"></i>
+                {{ option.label|default:option.url_name }}
+              </a>
+            {% empty %}
+              <p class="list-group-item text-muted">Geen download opties beschikbaar.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg"></i> Sluiten
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
+{# Let op: ID is nu generiek 'emailModal', niet meer met object.pk omdat die in de loop zit #}
+{# Zorg dat de knop die deze opent ook data-bs-target="#emailModal" gebruikt #}
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="emailModalLabel">
+              <i class="bi bi-envelope me-2"></i>E-mail Export: {{ object.subject|truncatechars:30 }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+        </div>
+        <div class="modal-body d-grid gap-2">
+           {# Loop over opties uit de view #}
+           {% for option in email_export_options %}
+            <form method="post" action="{% url 'instrument_email_export' object.pk %}" class="d-grid">
+              {% csrf_token %}
+              <input type="hidden" name="format" value="{{ option.fmt }}">
+              <button type="submit" class="btn btn-sm btn-outline-secondary text-start">
+                <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-2"></i> {{ option.label|default:option.fmt }} via e-mail
+              </button>
+            </form>
+            {% empty %}
+              <p class="text-muted">Geen e-mail opties beschikbaar.</p>
+            {% endfor %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg"></i> Sluiten
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if object %}Bewerk Indiening{% else %}Nieuwe Indiening{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card mx-auto mb-4" style="max-width: 800px;">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    {# Titel: Bewerken of Nieuw #}
+    <h1 class="h4 mb-0">{% if object %}Bewerk instrument{% else %}Nieuw instrument{% endif %}</h1>
+
+    {# TOEGEVOEGD: Knoppen voor Bekijk/Verwijder alleen bij bewerken #}
+    {% if object %}
+      <div>
+        <a href="{% url 'instrument_submission_detail' object.pk %}" class="btn btn-sm btn-outline-secondary" title="Bekijk Details">
+          <i class="bi bi-eye"></i> Bekijk
+        </a>
+        <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijder Indiening">
+          <i class="bi bi-trash"></i> Verwijder
+        </a>
+      </div>
+    {% endif %}
+    {# EINDE TOEGEVOEGD #}
+
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      {% csrf_token %}
+
+      {# --- Hoofdformulier --- #}
+       {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+      {% for field in form.visible_fields %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+          {% if field.field.widget.input_type == 'select' %}
+              {% render_field field class="form-select" %}
+          {% elif field.field.widget.input_type == 'checkbox' %}
+              <div class="form-check">
+                  {% render_field field class="form-check-input" %}
+                  <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+              </div>
+          {% else %}
+              {% render_field field class="form-control" %}
+          {% endif %}
+          {% if field.help_text %}
+            <div class="form-text">{{ field.help_text|safe }}</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="invalid-feedback d-block">
+              {{ field.errors|striptags }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      {% for field in form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+      {# --- Einde Hoofdformulier --- #}
+
+      <hr class="my-4">
+
+      {# --- Indieners Formset --- #}
+      <h2 class="h5 mb-3">Indieners</h2>
+      {{ submitter_formset.management_form }}
+
+      {% if submitter_formset.non_form_errors %}
+        <div class="alert alert-danger">
+          {{ submitter_formset.non_form_errors }}
+        </div>
+      {% endif %}
+
+      <div id="submitters-container">
+        {% for s_form in submitter_formset %}
+          <div class="submitter-form-wrapper mb-3">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text submitter-counter-text" style="min-width: 90px;">Indiener {{ forloop.counter }}</span>
+              {% for field in s_form.hidden_fields %}{{ field }}{% endfor %}
+
+              {# Initials Input #}
+              {% render_field s_form.initials class="form-control" placeholder="Initialen" aria-label="Initialen" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+              {# Last Name Input #}
+              {% render_field s_form.lastname class="form-control" placeholder="Achternaam" aria-label="Achternaam" %}
+
+              {# Party Input #}
+              {% render_field s_form.party class="form-control" placeholder="Partij/Org" aria-label="Partij of Organisatie" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+              {# DELETE Checkbox Addon #}
+              {% if s_form.DELETE %}
+                <div class="input-group-text" title="Aanvinken om deze indiener te verwijderen bij opslaan">
+                    {{ s_form.DELETE|add_class:"form-check-input mt-0"|attr:"aria-label:Verwijder deze indiener"|attr:"title:Verwijder deze indiener" }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="submitter-errors ps-1">
+                {% for field in s_form.visible_fields %}{% if field.errors %}
+                        <div class="text-danger small mt-1"><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</div>
+                {% endif %}{% endfor %}
+                {% if s_form.non_field_errors %}<div class="alert alert-danger alert-sm mt-1 p-1">{{ s_form.non_field_errors }}</div>{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <button type="button" id="add-submitter" class="btn btn-outline-success btn-sm mb-3">
+        <i class="bi bi-plus-circle"></i> Indiener toevoegen
+      </button>
+      {# --- Einde Indieners Formset --- #}
+
+
+      {# --- Verborgen template --- #}
+      <div id="empty-form-template" style="display: none;">
+          <div class="submitter-form-wrapper mb-3">
+            {% with s_form=submitter_formset.empty_form %}
+            <div class="input-group input-group-sm">
+              <span class="input-group-text submitter-counter-text" style="min-width: 90px;">Nieuw</span>
+              {% for field in s_form.hidden_fields %}{{ field }}{% endfor %}
+
+              {# Initials Input #}
+              {% render_field s_form.initials class="form-control" placeholder="Initialen" aria-label="Initialen" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+              {# Last Name Input #}
+              {% render_field s_form.lastname class="form-control" placeholder="Achternaam" aria-label="Achternaam" %}
+
+              {# Party Input #}
+              {% render_field s_form.party class="form-control" placeholder="Partij/Org" aria-label="Partij of Organisatie" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+              {% if s_form.DELETE %}
+                <div class="input-group-text" title="Aanvinken om deze indiener te verwijderen bij opslaan">
+                    {{ s_form.DELETE|add_class:"form-check-input mt-0"|attr:"aria-label:Verwijder deze indiener"|attr:"title:Verwijder deze indiener" }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="submitter-errors ps-1"></div>
+            {% endwith %}
+          </div>
+      </div>
+      {# --- Einde verborgen template --- #}
+
+      <hr class="my-4">
+
+      {# --- Actieknoppen --- #}
+       <div class="d-flex justify-content-end gap-2">
+        <button type="submit" name="submit_action" value="save_return" class="btn btn-outline-primary">
+          <i class="bi bi-save"></i> Opslaan
+        </button>
+        <button type="submit" name="submit_action" value="save_stay" class="btn btn-outline-secondary">
+          <i class="bi bi-save"></i> Opslaan en doorgaan met bewerken
+        </button>
+        <a href="{% url 'instrument_submission_list' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg"></i> Annuleren
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addSubmitterButton = document.getElementById('add-submitter');
+    const submittersContainer = document.getElementById('submitters-container');
+    const managementFormPrefix = '{{ submitter_formset.prefix }}';
+    const totalFormsInput = document.getElementById(`id_${managementFormPrefix}-TOTAL_FORMS`);
+    const emptyFormTemplateDiv = document.getElementById('empty-form-template');
+
+    if (!addSubmitterButton || !submittersContainer || !totalFormsInput || !emptyFormTemplateDiv) {
+        console.error("Formset add button/container/management form/template not found!");
+        return;
+    }
+    const emptyFormHtml = emptyFormTemplateDiv.innerHTML;
+
+    addSubmitterButton.addEventListener('click', function() {
+        let currentFormCount = parseInt(totalFormsInput.value, 10);
+        let newFormHtml = emptyFormHtml.replace(/__prefix__/g, currentFormCount);
+
+        // Create a new div element to hold the form *wrapper*
+        let tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newFormHtml;
+
+        // Haal de wrapper div (.submitter-form-wrapper) eruit
+        let newFormWrapper = tempDiv.firstElementChild; // Pak het eerste kind, wat de wrapper div is
+
+        if (newFormWrapper) {
+            // Update de teller tekst in de span
+            let counterSpan = newFormWrapper.querySelector('.submitter-counter-text');
+            if (counterSpan) {
+               // Tel 1 bij de index op voor weergave (index is 0-based, teller is 1-based)
+               counterSpan.textContent = `Indiener ${currentFormCount + 1}`;
+            }
+
+            submittersContainer.appendChild(newFormWrapper);
+            totalFormsInput.value = currentFormCount + 1;
+        } else {
+            console.error("Could not extract new form wrapper from template HTML.");
+        }
+    });
+});
+</script>
+{% endblock %}

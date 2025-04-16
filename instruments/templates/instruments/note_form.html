@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %} {# Laad widget_tweaks voor formulier rendering #}
+
+{% block title %}Notitie bewerken{% endblock %}
+
+{% block content %}
+<div class="card mx-auto mt-4" style="max-width: 600px;">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h1 class="h5 mb-0">Notitie bewerken</h1>
+    {# Optioneel: Link naar de detailpagina van de submission #}
+    <a href="{% url 'instrument_submission_detail' object.submission.pk %}" class="btn btn-sm btn-outline-secondary" title="Terug naar indiening">
+        <i class="bi bi-arrow-left"></i> Terug
+    </a>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+
+      {# Toon non-field errors bovenaan #}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {# Render form fields handmatig #}
+      {% for field in form.visible_fields %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+          {# Render het veld met 'form-control' klasse #}
+          {% render_field field class="form-control" rows="5" %} {# Pas 'rows' aan indien nodig #}
+
+          {% if field.help_text %}
+            <div class="form-text">{{ field.help_text|safe }}</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="invalid-feedback d-block"> {# Gebruik d-block om de error te tonen #}
+              {{ field.errors|striptags }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      {# Render hidden fields #}
+      {% for field in form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+
+      {# Actieknoppen onderaan, rechts uitgelijnd #}
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'instrument_submission_detail' object.submission.pk %}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg"></i> Annuleren
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> Opslaan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

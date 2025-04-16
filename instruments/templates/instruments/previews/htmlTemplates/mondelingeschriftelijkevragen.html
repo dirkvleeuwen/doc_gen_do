@@ -1,0 +1,16 @@
+<p><b>Aan het dagelijks bestuur</b></p>
+
+<p>Toelichting:</p>
+{% for consideration in considerations %}<p>{{ consideration }}</p>
+{% endfor %}
+<p><b>{{ voorgaande_sentence }}</b></p>
+
+{% if requests|length > 1 %}
+    <ol>
+        {% for request in requests %}
+            <li>{{ request }}</li>
+        {% endfor %}
+    </ol>
+{% else %}
+    <p>{% for request in requests %}{{ request }}{% endfor %}</p>
+{% endif %}

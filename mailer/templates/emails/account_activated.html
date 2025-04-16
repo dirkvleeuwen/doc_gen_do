@@ -1,0 +1,10 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Account Geactiveerd{% endblock %}
+{% block header %}Account Geactiveerd{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>Je hebt je account succesvol geactiveerd. Een beheerder zal je account beoordelen en goedkeuren.</p>
+<p>Je ontvangt een e-mail zodra je kunt inloggen.</p>
+<p>Met vriendelijke groet,<br>Het team</p>
+{% endblock %}

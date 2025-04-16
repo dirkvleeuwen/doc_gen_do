@@ -1,0 +1,16 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Document geëxporteerd{% endblock %}
+{% block header %}Welkom bij de Instrument Generator{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>In de bijlage vind je het bestand dat je hebt geëxporteerd vanuit de instrumententool voor:</p>
+<p>{{ submission.instrument }} over "{{ submission.subject }}".</p>
+<p>Met vriendelijke groet,<br>
+Dirk van Leeuwen</p>
+
+{% if body %}
+{{ body }}
+{% endif %}
+
+{% endblock %}

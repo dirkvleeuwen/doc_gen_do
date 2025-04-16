@@ -1,0 +1,5 @@
+{% load mailer_tags %}
+De volgende gebruiker is zojuist goedgekeurd:
+
+Naam: {{ user|display_name }}
+E-mailadres: {{ user.email }}

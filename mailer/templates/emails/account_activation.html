@@ -1,0 +1,10 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Activeer je account{% endblock %}
+{% block header %}Activeer je account{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>Bedankt voor je registratie. Klik op de onderstaande knop om je account te activeren:</p>
+<p><a href="{{ activation_url }}">Activeer mijn account</a></p>
+<p>Als je dit niet hebt aangevraagd, kun je deze e-mail negeren.</p>
+{% endblock %}

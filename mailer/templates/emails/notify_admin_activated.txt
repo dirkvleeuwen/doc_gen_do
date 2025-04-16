@@ -1,0 +1,7 @@
+{% load mailer_tags %}
+De volgende gebruiker heeft zijn account geactiveerd:
+
+Naam: {{ user|display_name }}
+E-mailadres: {{ user.email }}
+
+Je kunt het account nu goedkeuren in de admininterface.

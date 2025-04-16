@@ -1,0 +1,9 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Accountaanvraag ontvangen{% endblock %}
+{% block header %}Welkom bij de Instrument Generator{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>Bedankt voor je registratie. Je account wordt beoordeeld door een beheerder.</p>
+<p>Je ontvangt een e-mail zodra het is goedgekeurd.</p>
+{% endblock %}

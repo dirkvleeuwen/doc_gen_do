@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Notitie verwijderen{% endblock %}
+
+{% block content %}
+<div class="card mx-auto mt-4 border-danger" style="max-width: 600px;"> {# Rand rood gemaakt ipv header #}
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h1 class="h5 mb-0 text-danger"> {# Titel rood gemaakt #}
+      <i class="bi bi-exclamation-triangle-fill"></i> Notitie Verwijderen Bevestigen
+    </h1>
+  </div>
+  <div class="card-body">
+    <p>Weet je zeker dat je de volgende notitie permanent wilt verwijderen?</p>
+
+    {# Toon de te verwijderen notitie #}
+    <blockquote class="blockquote bg-light border p-3 rounded mb-4">
+      <p class="mb-0 small">{{ object.text|linebreaks }}</p>
+      <footer class="blockquote-footer mt-1"><small>{{ object.user }} op {{ object.created_at|date:"Y-m-d H:i" }}</small></footer>
+    </blockquote>
+
+    <form method="post" class="d-flex justify-content-end gap-2"> {# Rechts uitlijnen #}
+      {% csrf_token %}
+      <a href="{% url 'instrument_submission_detail' object.submission.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg"></i> Annuleren
+      </a>
+      <button type="submit" class="btn btn-danger">
+          <i class="bi bi-trash"></i> Ja, verwijderen
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

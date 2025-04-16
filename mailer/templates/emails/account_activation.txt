@@ -1,0 +1,8 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+Bedankt voor je registratie. Klik op de onderstaande link om je account te activeren:
+
+{{ activation_url }}
+
+Als je dit niet hebt aangevraagd, kun je deze e-mail negeren.

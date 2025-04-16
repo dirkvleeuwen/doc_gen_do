@@ -1,0 +1,14 @@
+<p><b>{{ instrument }} stadsdeelcommissie Zuid</b></p>
+<p>Datum{% if instrument != 'Schriftelijke vragen' %} SDC-vergadering{% endif %}: {{ date }}</p>
+
+<hr>
+<p><b>Onderwerp</b></p>
+<p>{{ instrument_sentence }}</p>
+<hr>
+
+{% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' %}{% include "instruments/previews/htmlTemplates/mondelingeschriftelijkevragen.html" %}{% elif instrument == 'Agendapunt' or instrument == 'Actualiteit' %}{% include "instruments/previews/htmlTemplates/agendapuntenactualiteiten.html" %}{% elif instrument == 'Motie' %}{% include "instruments/previews/htmlTemplates/moties.html" %}{% endif %}
+
+<hr>
+<p><b>{{ indiener_label }}</b></p>
+
+{% for indiener in indieners_sentence %}{{ indiener }}<br>{% endfor %}

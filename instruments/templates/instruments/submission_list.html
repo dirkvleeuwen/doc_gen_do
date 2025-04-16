@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load url_replace from url_replace %}
+{% block title %}Overzicht Indieningen{% endblock %}
+
+{% block content %}
+<div class="card mb-4 shadow-sm"> {# shadow-sm toegevoegd #}
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"> {# flex-wrap en gap toegevoegd #}
+    <h1 class="h5 mb-0">Overzicht Indieningen</h1> {# h5 consistentie #}
+    {# Header Knoppen nu btn-sm en met gap-2 #}
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'instrument_submission_create' %}" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-file-earmark-plus"></i> Nieuw
+      </a>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-download"></i> Download Overzicht
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end"> {# dropdown-menu-end voor betere uitlijning #}
+          <li>
+            <a class="dropdown-item" href="{% url 'instrument_submission_export' %}?{{ request.GET.urlencode }}">
+              <i class="bi bi-filetype-csv me-2"></i> CSV
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'instrument_submission_export_pdf' %}?{{ request.GET.urlencode }}">
+              <i class="bi bi-filetype-pdf me-2"></i> PDF
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+
+    {# --- Filter Sectie --- #}
+    <div class="accordion mb-4" id="filterAccordion">
+        <div class="accordion-item">
+            {# Vereenvoudigde Accordion Header Structuur #}
+            <h2 class="accordion-header" id="filterHeader">
+                <button class="accordion-button {% if not request.GET.filters_open %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="{% if request.GET.filters_open %}true{% else %}false{% endif %}" aria-controls="filterCollapse">
+                    <i class="bi bi-funnel me-2"></i> Filters
+                </button>
+            </h2>
+            <div id="filterCollapse" class="accordion-collapse collapse {% if request.GET.filters_open == "true" %}show{% endif %}" aria-labelledby="filterHeader" data-bs-parent="#filterAccordion">
+                <div class="accordion-body bg-light pt-3"> {# bg-light voor visueel onderscheid #}
+                    <form method="get" class="filter-form"> {# Class toegevoegd voor JS selector #}
+                        {# Verborgen veld om accordion staat door te geven #}
+                        <input type="hidden" name="filters_open" id="filters_open" value="{{ request.GET.filters_open|default:'false' }}">
+
+                        <div class="row g-2 mb-3"> {# g-2 voor kleinere gutters #}
+                            {# Zoekveld #}
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="q" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Zoek op onderwerp..." aria-label="Zoeken">
+                                </div>
+                            </div>
+                             {# Instrumentsoort #}
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Instrument</span> {# Label vereenvoudigd, 'for' verwijderd #}
+                                    <select id="instrument" name="instrument" class="form-select" aria-label="Instrumentsoort"> {# form-select gebruikt #}
+                                        <option value="" selected>- Alles -</option>
+                                        {% for value in instrument_choices %}
+                                        <option value="{{ value }}" {% if request.GET.instrument == value %}selected{% endif %}>{{ value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                             {# Datumbereik #}
+                            <div class="col-md-12">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Datum</span>
+                                    <span class="input-group-text">vanaf:</span>
+                                    <input type="date" id="date_from" name="date_from" value="{{ request.GET.date_from }}" class="form-control" aria-label="Datum vanaf">
+                                    <span class="input-group-text">tot:</span>
+                                    <input type="date" id="date_to" name="date_to" value="{{ request.GET.date_to }}" class="form-control" aria-label="Datum tot">
+                                </div>
+                            </div>
+                        </div>
+                        {# Knoppen #}
+                        <div class="d-flex justify-content-end gap-2">
+                             <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search"></i> Filter
+                             </button>
+                             <a href="{% url 'instrument_submission_list' %}" class="btn btn-sm btn-outline-secondary filter-reset-button"> {# Class toegevoegd voor JS selector #}
+                                <i class="bi bi-x-circle"></i> Reset
+                             </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# --- Einde Filter Sectie --- #}
+
+    {# --- Tabel met resultaten --- #}
+    <div class="card border-0"> {# Border verwijderd, zit al in hoofd card #}
+        {# Optioneel: Header voor tabel #}
+        {# <div class="card-header bg-transparent border-bottom"> #}
+        {#  <h6 class="mb-0">Resultaten</h6> #}
+        {# </div> #}
+        <div class="card-body p-0"> {# Padding verwijderd om tabel strakker aan te laten sluiten #}
+          <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm mb-0"> {# table-sm toegevoegd, mb-0 #}
+              <thead class="table-light">
+                <tr>
+                  {# Sorteerbare kolommen met icons #}
+                  {% with sort=request.GET.sort %}
+                  <th>
+                    <a href="?{% url_replace request 'sort' 'subject' %}" class="text-decoration-none text-dark fw-semibold"> {# fw-semibold toegevoegd #}
+                      Onderwerp
+                      {% if sort == 'subject' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'subject_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
+                    </a>
+                  </th>
+                  <th>
+                     <a href="?{% url_replace request 'sort' 'instrument' %}" class="text-decoration-none text-dark fw-semibold">
+                      Instrument
+                      {% if sort == 'instrument' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'instrument_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
+                    </a>
+                  </th>
+                  <th>
+                    <a href="?{% url_replace request 'sort' 'date' %}" class="text-decoration-none text-dark fw-semibold">
+                      Datum
+                       {% if sort == 'date' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'date_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
+                    </a>
+                  </th>
+                  <th>
+                     <a href="?{% url_replace request 'sort' 'updated_at' %}" class="text-decoration-none text-dark fw-semibold">
+                      Laatst bewerkt
+                      {% if sort == 'updated_at' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'updated_at_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
+                    </a>
+                  </th>
+                  <th class="fw-semibold text-dark">Indieners</th>
+                  <th class="fw-semibold text-dark">Acties</th>
+                  {% endwith %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for submission in submissions %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'instrument_submission_detail' submission.pk %}" class="text-decoration-none">
+                        {{ submission.subject }}
+                      </a>
+                    </td>
+                    <td>{{ submission.instrument }}</td>
+                    <td>{{ submission.date }}</td>
+                    <td>{{ submission.updated_at|date:"d-m-Y H:i" }}</td> {# Datum format aangepast #}
+                    <td>
+                      {% with submitters=submission.submitters.all %}
+                      <span class="badge text-bg-secondary rounded-pill">{{ submitters|length }}</span> {# rounded-pill #}
+                      {% if submitters %}
+                      <span class="ms-1 text-muted small" title="{% for s in submitters %}{{ s.initials }} {{ s.lastname }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                          {{ submitters.0.initials }} {{ submitters.0.lastname }}{% if submitters|length > 1 %}...{% endif %} {# Toon eerste + ... #}
+                      </span>
+                      {% endif %}
+                      {% endwith %}
+                    </td>
+                    <td>
+                      {# Vereenvoudigde actieknop layout #}
+                      <div class="d-flex flex-wrap gap-1">
+                        <a href="{% url 'instrument_submission_edit' submission.pk %}" class="btn btn-sm btn-outline-secondary" title="Bewerken">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        {# Export Modal Knop #}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#exportModal-{{ submission.pk }}" title="Download opties">
+                          <i class="bi bi-download"></i>
+                        </button>
+                        {# E-mail Modal Knop #}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal-{{ submission.pk }}" title="E-mail opties">
+                          <i class="bi bi-envelope"></i>
+                        </button>
+                         <a href="{% url 'instrument_submission_delete' submission.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
+                          <i class="bi bi-trash"></i>
+                        </a>
+                      </div>
+
+                      {# === BIJGEWERKTE MODALS PER RIJ === #}
+
+                      <div class="modal fade" id="exportModal-{{ submission.pk }}" tabindex="-1" aria-labelledby="exportModalLabel-{{ submission.pk }}" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="exportModalLabel-{{ submission.pk }}">
+                                    <i class="bi bi-download me-2"></i>Download: {{ submission.subject|truncatechars:30 }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+                              </div>
+                              <div class="modal-body">
+                                <div class="list-group list-group-flush">
+                                  {% for option in download_export_options %}
+                                    {# Genereer de URL dynamisch met de url_name uit de view #}
+                                    <a href="{% url option.url_name submission.pk %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                      <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-3" style="font-size: 1.2rem;"></i>
+                                      {{ option.label|default:option.url_name }}
+                                    </a>
+                                  {% empty %}
+                                    <p class="list-group-item text-muted">Geen download opties beschikbaar.</p>
+                                  {% endfor %}
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg"></i> Sluiten
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+
+                      <div class="modal fade" id="emailModal-{{ submission.pk }}" tabindex="-1" aria-labelledby="emailModalLabel-{{ submission.pk }}" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="emailModalLabel-{{ submission.pk }}">
+                                    <i class="bi bi-envelope me-2"></i>E-mail Export: {{ submission.subject|truncatechars:30 }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+                              </div>
+                              <div class="modal-body d-grid gap-2">
+                                {# CORRECTE LOOP: itereer over elke dictionary als 'option' #}
+                                {% for option in email_export_options %}
+                                 <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                   {% csrf_token %}
+                                   {# Gebruik option.fmt #}
+                                   <input type="hidden" name="format" value="{{ option.fmt }}">
+                                   <button type="submit" class="btn btn-sm btn-outline-secondary text-start">
+                                     {# Gebruik option.icon en option.label #}
+                                     <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-2"></i> {{ option.label|default:option.fmt }} via e-mail
+                                   </button>
+                                 </form>
+                                 {% empty %}
+                                   <p class="text-muted">Geen e-mail opties beschikbaar.</p>
+                                 {% endfor %}
+                                {# --- Oude hardcoded knoppen als fallback --- #}
+                                {% comment %}
+                                <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                  {% csrf_token %}<input type="hidden" name="format" value="pdf">
+                                  <button type="submit" class="btn btn-sm btn-outline-danger text-start"><i class="bi bi-file-earmark-pdf me-2"></i> PDF via e-mail</button>
+                                </form>
+                                <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                  {% csrf_token %}<input type="hidden" name="format" value="txt">
+                                  <button type="submit" class="btn btn-sm btn-outline-secondary text-start"><i class="bi bi-filetype-txt me-2"></i> TXT via e-mail</button>
+                                </form>
+                                <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                  {% csrf_token %}<input type="hidden" name="format" value="docx">
+                                  <button type="submit" class="btn btn-sm btn-outline-primary text-start"><i class="bi bi-file-earmark-word me-2"></i> Word (.docx) via e-mail</button>
+                                </form>
+                                <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                  {% csrf_token %}<input type="hidden" name="format" value="latex">
+                                  <button type="submit" class="btn btn-sm btn-outline-dark text-start"><i class="bi bi-filetype-pdf me-2"></i> LaTeX (.pdf) via e-mail</button>
+                                </form>
+                                <form method="post" action="{% url 'instrument_email_export' submission.pk %}" class="d-grid">
+                                  {% csrf_token %}<input type="hidden" name="format" value="latex_source">
+                                  <button type="submit" class="btn btn-sm btn-outline-dark text-start"><i class="bi bi-filetype-tex me-2"></i> LaTeX-bron (.tex) via e-mail</button>
+                                </form>
+                                {% endcomment %}
+                                {# --- Einde fallback --- #}
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg"></i> Sluiten
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                      {# === EINDE BIJGEWERKTE MODALS === #}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-3"> {# Padding toegevoegd #}
+                        {% if request.GET %}
+                            Geen indieningen gevonden die voldoen aan de filters. <a href="{% url 'instrument_submission_list' %}" class="text-decoration-none ms-2">Reset filters</a>.
+                        {% else %}
+                            Er zijn nog geen indieningen. <a href="{% url 'instrument_submission_create' %}" class="text-decoration-none ms-2">Maak de eerste!</a>
+                        {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+    {# --- Einde Tabel --- #}
+
+    {# --- Paginering met Iconen --- #}
+    {% if is_paginated %}
+      <nav aria-label="Paginering" class="mt-4">
+        <ul class="pagination pagination-sm justify-content-end"> {# pagination-sm #}
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?{% url_replace request 'page' 1 %}" aria-label="Eerste">
+                  <i class="bi bi-chevron-double-left"></i>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}" aria-label="Vorige">
+                  <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-left"></i></span></li>
+            <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+          {% endif %}
+
+          <li class="page-item disabled">
+              <span class="page-link">
+                  Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}
+              </span>
+          </li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}" aria-label="Volgende">
+                  <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?{% url_replace request 'page' page_obj.paginator.num_pages %}" aria-label="Laatste">
+                  <i class="bi bi-chevron-double-right"></i>
+              </a>
+            </li>
+          {% else %}
+             <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+             <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-right"></i></span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+    {# --- Einde Paginering --- #}
+  </div> {# Einde card-body #}
+</div> {# Einde card #}
+
+{% comment %} Vereist een template tag voor het vervangen van URL parameters {% endcomment %}
+{% comment %} Voorbeeld templatetags/url_helpers.py:
+from django import template
+
+register = template.Library()
+
+@register.simple_tag
+def url_replace(request, field, value):
+    dict_ = request.GET.copy()
+    if field == 'sort' and dict_.get('sort') == value:
+        # If sorting by the same field, toggle direction
+        dict_[field] = value + '_desc'
+    elif field == 'sort' and dict_.get('sort') == value + '_desc':
+        # If sorting descending, remove sort param to go back to default or ascending
+        dict_.pop(field, None)
+    else:
+        dict_[field] = value
+        # Reset page number when changing sort or filters
+        if field != 'page':
+            dict_.pop('page', None)
+
+    return dict_.urlencode()
+{% endcomment %}
+
+
+{% endblock %}
+
+{% block scripts %}
+{# Aangepast Javascript voor filter accordion state #}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterAccordion = document.getElementById('filterAccordion');
+    const filterCollapse = document.getElementById('filterCollapse');
+    const hiddenInput = document.getElementById('filters_open');
+    const filterForm = document.querySelector('form.filter-form'); // Select form by class
+    const resetButton = document.querySelector('a.filter-reset-button'); // Select button by class
+
+    if (filterCollapse && hiddenInput) {
+        // Update hidden input when collapsing/showing
+        filterCollapse.addEventListener('show.bs.collapse', function () {
+            hiddenInput.value = 'true';
+        });
+        filterCollapse.addEventListener('hide.bs.collapse', function () {
+             hiddenInput.value = 'false';
+        });
+
+        // Ensure hidden input is correct before form submission
+        if(filterForm) {
+            filterForm.addEventListener('submit', function() {
+                 // Check the current state of the collapse element
+                 hiddenInput.value = filterCollapse.classList.contains('show') ? 'true' : 'false';
+            });
+        }
+    }
+
+    // Handle reset button - simpler logic: just go to base URL
+    // De view moet dan zelf de default state (bv. filters_open=false) instellen
+    // if (resetButton) {
+    //     resetButton.addEventListener('click', function (event) {
+    //         event.preventDefault();
+    //         window.location.href = resetButton.href; // Go to URL without params
+    //     });
+    // }
+
+    // Verwijderd: Automatisch openen bij ingevulde velden.
+    // Dit kan onvoorspelbaar zijn en de expliciete 'filters_open' parameter is betrouwbaarder.
+    // De view moet zorgen dat 'show' class wordt toegevoegd als filters_open=true.
+
+});
+</script>
+{% endblock %}

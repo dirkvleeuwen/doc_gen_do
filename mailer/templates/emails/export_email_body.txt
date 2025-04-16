@@ -1,0 +1,9 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+In de bijlage vind je het bestand dat je hebt geëxporteerd vanuit de instrumententool voor:
+
+{{ submission.instrument }} over "{{ submission.subject }}".
+
+Met vriendelijke groet,  
+Het team

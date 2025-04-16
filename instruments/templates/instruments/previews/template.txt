@@ -1,0 +1,14 @@
+{% if instrument == 'Schriftelijke vragen' %}
+{{ instrument }} stadsdeelcommissie Zuid
+Datum: {{ date }}
+{% else %}
+{{ instrument }} stadsdeelcommissie Zuid
+Datum SDC-vergadering: {{ date }}
+{% endif %}
+Onderwerp
+{{ instrument_sentence }}
+
+{% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' %}{% include "instruments/previews/txtTemplates/mondelingeschriftelijkevragen.txt" %}{% elif instrument == 'Agendapunt' or instrument == 'Actualiteit' %}{% include "instruments/previews/txtTemplates/agendapuntenactualiteiten.txt" %}{% elif instrument == 'Motie' %}{% include "instruments/previews/txtTemplates/moties.txt" %}{% endif %}
+{{ indiener_label }}
+{% for indiener in indieners_sentence %}
+{{ indiener }}{% endfor %}

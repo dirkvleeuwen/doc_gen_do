@@ -1,0 +1,11 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Gebruiker Account Goedgekeurd{% endblock %}
+{% block header %}Account Goedgekeurd{% endblock %}
+{% block content %}
+<p>De volgende gebruiker is zojuist goedgekeurd:</p>
+<ul>
+  <li>Naam: {{ user|display_name }}</li>
+  <li>E-mailadres: {{ user.email }}</li>
+</ul>
+{% endblock %}

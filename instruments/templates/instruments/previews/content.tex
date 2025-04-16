@@ -1,0 +1,64 @@
+{% load latex_filters %}
+\begin{document}
+\logorechtsboven{Logo-Gemeente-Amsterdam.png}
+{% if instrument == 'Schriftelijke vragen' %}
+    \titelmetdatum{ {{ instrument|latex_escape }} }{stadsdeelcommissie}{Zuid}{Datum:}{ {{ date|latex_escape }} }{1}
+{% else %}
+    \titelmetdatum{ {{ instrument|latex_escape }} }{stadsdeelcommissie}{Zuid}{Datum SDC-vergadering:}{ {{ date|latex_escape }} }{1}
+{% endif %}
+
+\kopmetlijn{ Onderwerp }
+\begin{enumerate}[leftmargin=0cm,label={}]
+    \item {{ instrument_sentence|latex_escape }}
+\end{enumerate}
+
+{% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' %}
+    \kopmetlijn{ Aan het dagelijks bestuur }
+{% elif instrument == 'Agendapunt' or instrument == 'Actualiteit' %}
+    \kopmetlijn{ Toelichting }
+{% elif instrument == 'Motie' %}
+    \kopmetlijn{ Aan de stadsdeelcommissie }
+{% endif %}
+
+\begin{enumerate}[leftmargin=0cm,label={}]
+    {% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' %}
+        \item \textit{Toelichting:}
+    {% elif instrument == 'Motie' %}
+        \item Ondergetekende heeft de eer om voor te stellen:
+        \item De stadsdeelcommissie,
+        \item Gehoord de beraadslaging inzake het vestigingsklimaat van de Zuidas,
+    {% endif %}
+    {% for consideration in considerations %}
+        \item {{ consideration|latex_escape }}
+    {% endfor %}
+\end{enumerate}
+
+{% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' %}
+    \begin{enumerate}[leftmargin=0cm,label={}]
+        \item \textit{ {{ voorgaande_sentence|latex_escape }} }
+    \end{enumerate}
+{% elif instrument == 'Motie' %}
+    \kopmetlijn{ Verzoekt het dagelijks bestuur }
+{% endif %}
+
+{% if instrument == 'Schriftelijke vragen' or instrument == 'Mondelinge vragen' or instrument == 'Motie' %}
+    {% if requests|length > 1 %}
+        \begin{enumerate}[leftmargin=0.5cm]
+            {% for request in requests %}
+                \item {{ request|latex_escape }}
+            {% endfor %}
+        \end{enumerate}
+    {% else %}
+            {% for request in requests %}
+                {{ request|latex_escape }}\\
+            {% endfor %}
+    {% endif %}
+{% endif %}
+
+\hrule height 2pt depth .2pt width \textwidth
+\section*{\normalsize {{ indiener_label }} }
+{% for indiener in indieners_sentence %}
+    {{ indiener|latex_escape }}
+{% endfor %}
+
+\end{document}

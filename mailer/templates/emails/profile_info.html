@@ -1,0 +1,15 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Profielinformatie{% endblock %}
+{% block header %}Je profielinformatie{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>Hierbij sturen we je profielinformatie zoals deze nu is geregistreerd:</p>
+<ul>
+  <li><strong>Initialen:</strong> {{ user.initials }}</li>
+  <li><strong>Voornaam:</strong> {{ user.first_name }}</li>
+  <li><strong>Achternaam:</strong> {{ user.last_name }}</li>
+  <li><strong>E-mailadres:</strong> {{ user.email }}</li>
+  <li><strong>Partij:</strong> {{ user.party }}</li>
+</ul>
+{% endblock %}

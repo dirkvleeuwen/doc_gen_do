@@ -1,0 +1,8 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Account Goedgekeurd{% endblock %}
+{% block header %}Je account is geactiveerd{% endblock %}
+{% block content %}
+<p>Beste {{ user|display_name }},</p>
+<p>Je account is goedgekeurd. Je kunt nu <a href="{% url 'accounts:login' %}">inloggen</a>.</p>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+Hierbij sturen we je profielinformatie zoals deze nu is geregistreerd:
+
+Initialen: {{ user.initials }}
+Voornaam: {{ user.first_name }}
+Achternaam: {{ user.last_name }}
+E-mailadres: {{ user.email }}
+Partij: {{ user.party }}
+
+Met vriendelijke groet,  
+Het team van Instrument Generator

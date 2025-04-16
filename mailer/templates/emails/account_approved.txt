@@ -1,0 +1,7 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+Je account is goedgekeurd door een beheerder. Je kunt nu inloggen op de website.
+
+Met vriendelijke groet,  
+Het team

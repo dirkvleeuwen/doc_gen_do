@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Instrumentenlijst</title>
+  <style>
+    body { font-family: sans-serif; font-size: 12px; color: #111; }
+    h1 { font-size: 16px; margin-bottom: 0.5em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #999; padding: 6px; text-align: left; }
+    th { background: #eee; }
+    .meta { font-size: 10px; color: #666; margin-top: 2em; }
+  </style>
+</head>
+<body>
+  <h1>Overzicht van ingediende instrumenten</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Onderwerp</th>
+        <th>Instrument</th>
+        <th>Datum</th>
+        <th>Laatst bewerkt</th>
+        <th>Indieners</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for submission in submissions %}
+        <tr>
+          <td>{{ submission.subject }}</td>
+          <td>{{ submission.instrument }}</td>
+          <td>{{ submission.date|date:"Y-m-d" }}</td>
+          <td>{{ submission.updated_at|date:"Y-m-d H:i" }}</td>
+          <td>
+            {% for s in submission.submitters.all %}
+              {{ s.initials }} {{ s.lastname }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="meta">Gegenereerd op {{ now|date:"Y-m-d H:i" }}</p>
+</body>
+</html>

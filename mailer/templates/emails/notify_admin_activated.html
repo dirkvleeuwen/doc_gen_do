@@ -1,0 +1,12 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Gebruiker Account Geactiveerd{% endblock %}
+{% block header %}Account Activatie Door Gebruiker{% endblock %}
+{% block content %}
+<p>De volgende gebruiker heeft zijn account geactiveerd:</p>
+<ul>
+  <li>Naam: {{ user|display_name }}</li>
+  <li>E-mailadres: {{ user.email }}</li>
+</ul>
+<p>Je kunt het account nu goedkeuren in de admininterface.</p>
+{% endblock %}

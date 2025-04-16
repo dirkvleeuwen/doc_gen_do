@@ -1,0 +1,13 @@
+Aan de stadsdeelcommissie
+
+Ondergetekende heeft de eer om voor te stellen:
+
+De stadsdeelcommissie,
+Gehoord de beraadslaging inzake {{ subject }},
+{% for consideration in considerations %}{{ consideration }}
+{% endfor %}
+Verzoekt het dagelijks bestuur
+
+{% if requests|length > 1 %}{% for request in requests %}- {{ request }}
+{% endfor %}{% else %}{% for request in requests %}{{ request }}
+{% endfor %}{% endif %}

@@ -1,0 +1,9 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+Je hebt je account succesvol geactiveerd. Een beheerder zal je account beoordelen en goedkeuren.
+
+Je ontvangt een e-mail zodra je kunt inloggen.
+
+Met vriendelijke groet,  
+Het team

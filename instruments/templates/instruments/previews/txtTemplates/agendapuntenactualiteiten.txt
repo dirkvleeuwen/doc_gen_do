@@ -1,0 +1,4 @@
+Toelichting
+
+{% for consideration in considerations %}{{ consideration }}
+{% endfor %}

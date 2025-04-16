@@ -1,0 +1,35 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Secrets / Environment variables
+.env
+
+# SQLite database (als je die lokaal gebruikt)
+db.sqlite3
+db.sqlite3-journal
+
+# Django staticfiles collectie (als lokaal gedraaid)
+staticfiles/
+staticfiles_collected/ # De map uit settings.py voor S3
+
+# Media files (als lokaal opgeslagen en niet in Git gewenst)
+media/
+
+# IDE / OS specific files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Backup folder (!!!)
+backup/
+
+# Coverage reports
+htmlcov/
+.coverage

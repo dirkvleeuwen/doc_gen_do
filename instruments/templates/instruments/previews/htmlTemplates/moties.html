@@ -1,0 +1,20 @@
+<p><b>Aan de stadsdeelcommissie</b></p>
+
+<p>Ondergetekende heeft de eer om voor te stellen:</p>
+
+<p>De stadsdeelcommissie,</p>
+<p>Gehoord de beraadslaging inzake {{ subject }},</p>
+{% for consideration in considerations %}<p>{{ consideration }}</p>
+{% endfor %}
+<hr>
+<p><b>Verzoekt het dagelijks bestuur</b></p>
+
+{% if requests|length > 1 %}
+    <ol>
+        {% for request in requests %}
+            <li>{{ request }}</li>
+        {% endfor %}
+    </ol>
+{% else %}
+    <p>{% for request in requests %}{{ request }}{% endfor %}</p>
+{% endif %}

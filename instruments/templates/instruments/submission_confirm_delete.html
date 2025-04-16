@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Indiening verwijderen{% endblock %}
+
+{% block content %}
+<div class="card mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-danger text-white">
+        <h2 class="h5 mb-0">Indiening verwijderen</h2>
+    </div>
+    <div class="card-body">
+        <p class="mb-3">Weet je zeker dat je de indiening <strong>{{ object.instrument }} - {{ object.subject }}</strong> wilt verwijderen?</p>
+        {% if object.submitters.count > 0 %}
+            <div class="alert alert-warning">
+                Let op: deze indiening heeft {{ object.submitters.count }} gekoppelde indiener{{ object.submitters.count|pluralize }} en deze worden ook verwijderd.
+            </div>
+        {% endif %}
+        <form method="post" class="d-flex justify-content-end gap-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Ja, verwijder</button>
+            <a href="{% url 'instrument_submission_detail' object.pk %}" class="btn btn-secondary">Annuleer</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

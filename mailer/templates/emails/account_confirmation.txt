@@ -1,0 +1,9 @@
+{% load mailer_tags %}
+Beste {{ user|display_name }},
+
+Bedankt voor je registratie. Je account wordt beoordeeld door een beheerder.
+
+Je ontvangt een e-mail zodra het is goedgekeurd.
+
+Met vriendelijke groet,  
+Het team

@@ -1,0 +1,10 @@
+Aan het dagelijks bestuur
+
+Toelichting:
+{% for consideration in considerations %}{{ consideration }}
+{% endfor %}
+{{ voorgaande_sentence }}
+
+{% if requests|length > 1 %}{% for request in requests %}- {{ request }}
+{% endfor %}{% else %}{% for request in requests %}{{ request }}
+{% endfor %}{% endif %}

@@ -1,0 +1,8 @@
+{% extends "emails/base_email.html" %}
+{% load mailer_tags %}
+{% block title %}Nieuwe registratie{% endblock %}
+{% block header %}Nieuwe gebruiker geregistreerd{% endblock %}
+{% block content %}
+<p>Gebruiker <strong><p>{{ user|display_name }}</strong> heeft zich geregistreerd.</p>
+<p>Activeer het account in de <a href="http://127.0.0.1:8000/admin/auth/user/">admin</a>.</p>
+{% endblock %}

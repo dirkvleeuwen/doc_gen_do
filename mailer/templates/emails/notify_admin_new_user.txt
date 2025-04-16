@@ -1,0 +1,10 @@
+{% load mailer_tags %}
+Er is een nieuwe registratie op de website:
+
+Naam: {{ user|display_name }}
+E-mailadres: {{ user.email }}
+
+Je kunt het account goedkeuren via de admininterface.
+
+Met vriendelijke groet,
+Het systeem
