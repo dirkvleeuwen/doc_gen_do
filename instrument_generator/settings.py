@@ -128,11 +128,32 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-
+# STATIC_URL = '/static/'
 # De map waar 'collectstatic' alle static files verzamelt voor productie
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# AWS S3 Static Files Settings (gebruik django-storages)
+# Haal bucket naam etc. idealiter ook uit Parameter Store of env var
+AWS_ACCESS_KEY_ID = None # Wordt via IAM Role geregeld op EC2
+AWS_SECRET_ACCESS_KEY = None # Wordt via IAM Role geregeld op EC2
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'instrument-generator-static-prod-uniqueid') # Haal uit env/Parameter Store
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+AWS_DEFAULT_ACL = 'public-read' # Zorgt dat collectstatic bestanden publiek maakt
+AWS_LOCATION = 'static' # Submap in de bucket voor static files
+AWS_S3_REGION_NAME = os.getenv('AWS_REGION', 'eu-central-1') # Stel je regio in
+AWS_S3_FILE_OVERWRITE = True # Overschrijf bestanden bij collectstatic
+
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+
+# STATIC_ROOT is niet meer nodig voor S3, maar collectstatic gebruikt het intern
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') # Map hoeft niet te bestaan
+
+# Media files (als je uploads hebt) kunnen ook naar S3
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+# MEDIA_ROOT = 'media' # Submap in bucket voor media files
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
