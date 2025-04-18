@@ -2,27 +2,28 @@ version: 0.2
 
 phases:
   install:
+    # Geef expliciet aan welke Python je wil
     runtime-versions:
       python: 3.12
     commands:
-      - echo "----- Create venv -----"
+      - echo "----- Create virtualenv -----"
       - python -m venv .venv
-      - echo "----- Activate venv -----"
-      - . .venv/bin/activate
-      - echo "----- Install dependencies -----"
-      - pip install -r requirements.txt
+      - echo "----- Upgrade pip & install deps -----"
+      - .venv/bin/pip install --upgrade pip
+      - .venv/bin/pip install -r requirements.txt
 
   pre_build:
     commands:
       - echo "----- Run tests -----"
-      - . .venv/bin/activate
-      - pytest --maxfail=1 --disable-warnings -q
+      # Roep pytest uit je venv aan, zonder source/activate
+      - .venv/bin/pytest --maxfail=1 --disable-warnings -q
 
   build:
     commands:
-      - echo "----- Build phase (noop) -----"
+      - echo "----- Build complete -----"
 
 artifacts:
+  # Zorg dat CodeDeploy alles pakt wat 'ie nodig heeft
   files:
     - appspec.yml
     - scripts/**/*
