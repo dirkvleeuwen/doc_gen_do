@@ -10,171 +10,233 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
-from django.urls import reverse_lazy, path, include
-from django.contrib import admin
-
-ADMINS = [("Dirk van Leeuwen", "admin@doc-gen.eu")]
+from pathlib import Path
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# ------------------------------------------------------------------------------
+# SECURITY & DEBUG
+# ------------------------------------------------------------------------------
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hzz9ewvn1y*dow26n5bkxgdtw#(+uvf==1jyo^lsl5_0^x-yhw'
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY and os.getenv("DJANGO_ENV") == "production":
+    raise ValueError("No SECRET_KEY set for production environment!")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
+allowed_hosts = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(",") if h.strip()]
 
-ALLOWED_HOSTS = []
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://doc-gen.eu",
+    "https://www.doc-gen.eu",
+    "https://35.156.89.125",
+]
 
 
-# Application definition
+# ------------------------------------------------------------------------------
+# APPLICATIONS
+# ------------------------------------------------------------------------------
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'instruments',
-    'accounts',
-    'mailer',
-    'widget_tweaks',
+    # Django core
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Your apps
+    "instruments",
+    "accounts",
+    "mailer",
+    "widget_tweaks",
+    # Third‑party
+    "storages",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
 ]
 
-ROOT_URLCONF = 'instrument_generator.urls'
+ROOT_URLCONF = "instrument_generator.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates',
-            # eventueel meer paden:
-            # BASE_DIR / 'extra_templates'
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'instrument_generator.wsgi.application'
+WSGI_APPLICATION = "instrument_generator.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# ------------------------------------------------------------------------------
+# DATABASE
+# ------------------------------------------------------------------------------
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ------------------------------------------------------------------------------
+# AUTHENTICATION
+# ------------------------------------------------------------------------------
+
+AUTH_USER_MODEL = "accounts.CustomUser"
+AUTHENTICATION_BACKENDS = ["accounts.auth_backends.ApprovedUserBackend"]
+LOGIN_URL = reverse_lazy("accounts:login")
+LOGIN_REDIRECT_URL = "/instruments/submissions/"
+LOGOUT_REDIRECT_URL = "/instruments/submissions/"
+
+
+# ------------------------------------------------------------------------------
+# PASSWORD VALIDATION
+# ------------------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# ------------------------------------------------------------------------------
+# INTERNATIONALIZATION
+# ------------------------------------------------------------------------------
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# ------------------------------------------------------------------------------
+# STORAGES (Django ≥4.2 API) – Static files on S3
+# ------------------------------------------------------------------------------
 
-# STATIC_URL = '/static/'
-# De map waar 'collectstatic' alle static files verzamelt voor productie
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            # required
+            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+            # region
+            "region_name": os.getenv("AWS_S3_REGION_NAME", "eu-central-1"),
+            # path prefix in the bucket
+            "location": "static",
+            # canned ACL (public-read for admin assets)
+            # "default_acl": "public-read",
+            # object parameters, e.g. cache control
+            "object_parameters": {"CacheControl": "max-age=86400"},
+            # overwrite behavior
+            "file_overwrite": True,
+            # remove querystring auth from URLs
+            "querystring_auth": False,
+            # custom domain for serving static via S3
+            "custom_domain": (
+                f"{os.getenv('AWS_STORAGE_BUCKET_NAME')}"
+                f".s3.{os.getenv('AWS_S3_REGION_NAME','eu-central-1')}.amazonaws.com"
+            ),
+        },
+    },
+    # Uncomment and configure to also put media/uploads on S3:
+    # "default": {
+    #     "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    #     "OPTIONS": {
+    #         "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+    #         "region_name": os.getenv("AWS_S3_REGION_NAME", "eu-central-1"),
+    #         "location": "media",
+    #         "default_acl": "public-read",
+    #         "object_parameters": {"CacheControl": "max-age=86400"},
+    #         "querystring_auth": False,
+    #     },
+    # },
+}
 
-# AWS S3 Static Files Settings (gebruik django-storages)
-# Haal bucket naam etc. idealiter ook uit Parameter Store of env var
-AWS_ACCESS_KEY_ID = None # Wordt via IAM Role geregeld op EC2
-AWS_SECRET_ACCESS_KEY = None # Wordt via IAM Role geregeld op EC2
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'instrument-generator-static-prod-uniqueid') # Haal uit env/Parameter Store
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-AWS_DEFAULT_ACL = 'public-read' # Zorgt dat collectstatic bestanden publiek maakt
-AWS_LOCATION = 'static' # Submap in de bucket voor static files
-AWS_S3_REGION_NAME = os.getenv('AWS_REGION', 'eu-central-1') # Stel je regio in
-AWS_S3_FILE_OVERWRITE = True # Overschrijf bestanden bij collectstatic
+# URLs for static assets
+STATIC_URL = f"https://{STORAGES['staticfiles']['OPTIONS']['custom_domain']}/static/"
 
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+# STATIC_ROOT is only needed if you run collectstatic locally.
+# With the STORAGES API uploads go straight to S3.
+STATIC_ROOT = BASE_DIR / "staticfiles_collected"
 
-# STATIC_ROOT is niet meer nodig voor S3, maar collectstatic gebruikt het intern
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') # Map hoeft niet te bestaan
 
-# Media files (als je uploads hebt) kunnen ook naar S3
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-# MEDIA_ROOT = 'media' # Submap in bucket voor media files
+# ------------------------------------------------------------------------------
+# SECURITY
+# ------------------------------------------------------------------------------
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 3600  # increase to a year (31536000) once stable
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# E-mailinstellingen
+# ------------------------------------------------------------------------------
+# EMAIL
+# ------------------------------------------------------------------------------
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "mail.privateemail.com"
 EMAIL_PORT = 465
-EMAIL_USE_SSL = True  # Let op: SSL, niet TLS
-EMAIL_HOST_USER = "admin@doc-gen.eu"
-EMAIL_HOST_PASSWORD = "MbjRhqp4*Vy^B5K67EhM"
-DEFAULT_FROM_EMAIL = "admin@doc-gen.eu"
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 
-# Voeg TeX-bin toe aan PATH voor subprocess
-os.environ["PATH"] += os.pathsep + "/Library/TeX/texbin"
 
-# In settings.py:
-AUTH_USER_MODEL = "accounts.CustomUser"
-LOGIN_REDIRECT_URL = "/instruments/submissions/"
-LOGOUT_REDIRECT_URL = "/instruments/submissions/"
-LOGIN_URL = reverse_lazy("accounts:login")
-AUTHENTICATION_BACKENDS = ["accounts.auth_backends.ApprovedUserBackend"]
+# ------------------------------------------------------------------------------
+# OTHER SETTINGS
+# ------------------------------------------------------------------------------
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# ensure pdflatex is on PATH for any TeX subprocess calls
+os.environ["PATH"] += os.pathsep + "/usr/bin/pdflatex"
+
+
+# ------------------------------------------------------------------------------
+# LOGGING
+# ------------------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        }
+    },
+}
