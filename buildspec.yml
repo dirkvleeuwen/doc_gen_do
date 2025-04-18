@@ -1,0 +1,33 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - echo "----- Install dependencies -----"
+      - python -m venv .venv
+      - source .venv/bin/activate
+      - pip install -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo "----- Running tests -----"
+      - source .venv/bin/activate
+      - pytest --maxfail=1 --disable-warnings -q
+
+  build:
+    commands:
+      - echo "----- Build phase (nothing to do here) -----"
+
+  post_build:
+    commands:
+      - echo "----- Build completed on `date` -----"
+
+artifacts:
+  # Zorg dat appspec.yml, scripts/ en álle code-artifacts mee gaan naar CodeDeploy
+  files:
+    - appspec.yml
+    - scripts/**/*
+    - "**/*"
+  discard-paths: no
