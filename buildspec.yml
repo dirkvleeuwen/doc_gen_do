@@ -5,27 +5,24 @@ phases:
     runtime-versions:
       python: 3.12
     commands:
-      - echo "----- Install dependencies -----"
+      - echo "----- Create venv -----"
       - python -m venv .venv
-      - source .venv/bin/activate
+      - echo "----- Activate venv -----"
+      - . .venv/bin/activate
+      - echo "----- Install dependencies -----"
       - pip install -r requirements.txt
 
   pre_build:
     commands:
-      - echo "----- Running tests -----"
-      - source .venv/bin/activate
+      - echo "----- Run tests -----"
+      - . .venv/bin/activate
       - pytest --maxfail=1 --disable-warnings -q
 
   build:
     commands:
-      - echo "----- Build phase (nothing to do here) -----"
-
-  post_build:
-    commands:
-      - echo "----- Build completed on `date` -----"
+      - echo "----- Build phase (noop) -----"
 
 artifacts:
-  # Zorg dat appspec.yml, scripts/ en álle code-artifacts mee gaan naar CodeDeploy
   files:
     - appspec.yml
     - scripts/**/*
