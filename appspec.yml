@@ -1,0 +1,25 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/instrument_generator
+hooks:
+  BeforeInstall:
+    - location: scripts/stop_app.sh
+      timeout: 300
+      runas: ubuntu
+  AfterInstall:
+    - location: scripts/install_deps.sh
+      timeout: 900
+      runas: ubuntu
+    - location: scripts/migrate_and_collectstatic.sh
+      timeout: 900
+      runas: ubuntu
+  ApplicationStart:
+    - location: scripts/start_app.sh
+      timeout: 300
+      runas: ubuntu
+  ValidateService:
+    - location: scripts/health_check.sh
+      timeout: 300
+      runas: ubuntu
