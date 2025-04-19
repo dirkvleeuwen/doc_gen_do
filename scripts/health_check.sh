@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# aantal pogingen en interval kun je naar wens tunen
 MAX_RETRIES=30
 SLEEP_SECONDS=2
 
