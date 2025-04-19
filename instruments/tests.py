@@ -29,7 +29,12 @@ def test_instrumentsubmission_str():
 
 @pytest.mark.django_db
 def test_note_str():
-    user = User.objects.create_user(username="note_tester", password="secret")
+    user = User.objects.create_user(
+        email="notetester@example.com",
+        password="secret",
+        initials="Note",
+        last_name="Tester"
+    )
     # eerst een submission nodig, anders foreign key failure
     sub = InstrumentSubmission.objects.create(
         owner=user,
