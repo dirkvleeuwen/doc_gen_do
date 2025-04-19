@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1) wacht tot Nginx/Gunicorn up is (max 30s)
-for i in {1..30}; do
-  if ss -tulpn | grep -q ':80 '; then
-    break
+# aantal pogingen en interval kun je naar wens tunen
+MAX_RETRIES=30
+SLEEP_SECONDS=2
+
+for i in $(seq 1 $MAX_RETRIES); do
+  code=$(curl -s -o /dev/null \
+         --resolve doc-gen.eu:80:127.0.0.1 \
+         -w '%{http_code}' \
+         http://doc-gen.eu/health/ || true)
+  echo "Health check attempt $i: HTTP $code"
+  if [ "$code" -eq 200 ]; then
+    echo "→ OK"
+    exit 0
   fi
-  sleep 1
+  sleep $SLEEP_SECONDS
 done
 
-# 2) pingen met exact de hostnaam uit ALLOWED_HOSTS
-curl --fail \
-     --resolve doc-gen.eu:80:127.0.0.1 \
-     http://doc-gen.eu/health/
+echo "→ FAIL: geen 200 na $MAX_RETRIES pogingen"
+exit 1
