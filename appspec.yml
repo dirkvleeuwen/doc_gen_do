@@ -4,6 +4,8 @@ file_exists_behavior: OVERWRITE
 files:
   - source: /
     destination: /home/ubuntu/instrument_generator
+  - source: deploy/nginx/instrument_generator.conf
+    destination: /etc/nginx/sites-enabled/instrument_generator
 hooks:
   BeforeInstall:
     - location: scripts/stop_app.sh
@@ -13,6 +15,9 @@ hooks:
     - location: scripts/install_deps.sh
       timeout: 900
       runas: ubuntu
+    - location: scripts/reload-nginx.sh
+      timeout: 300
+      runas: root
     - location: scripts/migrate_and_collectstatic.sh
       timeout: 900
       runas: ubuntu
