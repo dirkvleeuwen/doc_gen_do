@@ -12,7 +12,11 @@ phases:
       - pip install --upgrade pip
       - pip install -r requirements.txt
       - echo "Generate .env from SSM parameters"
+      - echo "SOURCE DIR: $CODEBUILD_SRC_DIR"
+      - ls -la $CODEBUILD_SRC_DIR
       - python create_dot_env.py
+      - echo "After create_dot_env.py:"
+      - ls -la $CODEBUILD_SRC_DIR
   build:
     commands:
       - . .venv/bin/activate
