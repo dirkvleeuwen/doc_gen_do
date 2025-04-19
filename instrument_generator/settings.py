@@ -17,7 +17,6 @@ from django.urls import reverse_lazy
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # ------------------------------------------------------------------------------
 # SECURITY & DEBUG
 # ------------------------------------------------------------------------------
@@ -38,7 +37,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.doc-gen.eu",
     "https://35.156.89.125",
 ]
-
 
 # ------------------------------------------------------------------------------
 # APPLICATIONS
@@ -91,7 +89,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "instrument_generator.wsgi.application"
 
-
 # ------------------------------------------------------------------------------
 # DATABASE
 # ------------------------------------------------------------------------------
@@ -107,7 +104,6 @@ DATABASES = {
     }
 }
 
-
 # ------------------------------------------------------------------------------
 # AUTHENTICATION
 # ------------------------------------------------------------------------------
@@ -117,7 +113,6 @@ AUTHENTICATION_BACKENDS = ["accounts.auth_backends.ApprovedUserBackend"]
 LOGIN_URL = reverse_lazy("accounts:login")
 LOGIN_REDIRECT_URL = "/instruments/submissions/"
 LOGOUT_REDIRECT_URL = "/instruments/submissions/"
-
 
 # ------------------------------------------------------------------------------
 # PASSWORD VALIDATION
@@ -130,7 +125,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
 # ------------------------------------------------------------------------------
 # INTERNATIONALIZATION
 # ------------------------------------------------------------------------------
@@ -140,57 +134,31 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-
 # ------------------------------------------------------------------------------
-# STORAGES (Django ≥4.2 API) – Static files on S3
+# STATICFILES STORAGE (lokale FS tijdens CI, S3 in prod)
 # ------------------------------------------------------------------------------
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        "OPTIONS": {
-            # required
-            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-            # region
-            "region_name": os.getenv("AWS_S3_REGION_NAME", "eu-central-1"),
-            # path prefix in the bucket
-            "location": "static",
-            # canned ACL (public-read for admin assets)
-            # "default_acl": "public-read",
-            # object parameters, e.g. cache control
-            "object_parameters": {"CacheControl": "max-age=86400"},
-            # overwrite behavior
-            "file_overwrite": True,
-            # remove querystring auth from URLs
-            "querystring_auth": False,
-            # custom domain for serving static via S3
-            "custom_domain": (
-                f"{os.getenv('AWS_STORAGE_BUCKET_NAME')}"
-                f".s3.{os.getenv('AWS_S3_REGION_NAME','eu-central-1')}.amazonaws.com"
-            ),
-        },
-    },
-    # Uncomment and configure to also put media/uploads on S3:
-    # "default": {
-    #     "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    #     "OPTIONS": {
-    #         "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-    #         "region_name": os.getenv("AWS_S3_REGION_NAME", "eu-central-1"),
-    #         "location": "media",
-    #         "default_acl": "public-read",
-    #         "object_parameters": {"CacheControl": "max-age=86400"},
-    #         "querystring_auth": False,
-    #     },
-    # },
-}
+# detecteer CI-omgeving via env var
+IS_CI = os.getenv("CI", "false").lower() == "true"
 
-# URLs for static assets
-STATIC_URL = f"https://{STORAGES['staticfiles']['OPTIONS']['custom_domain']}/static/"
+if IS_CI:
+    # tijdens CodeBuild: lokaal opslaan
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    STATIC_URL = "/static/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+else:
+    # productie: S3
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "eu-central-1")
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    AWS_LOCATION = "static"
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_QUERYSTRING_AUTH = False
 
-# STATIC_ROOT is only needed if you run collectstatic locally.
-# With the STORAGES API uploads go straight to S3.
-STATIC_ROOT = BASE_DIR / "staticfiles_collected"
-
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
 
 # ------------------------------------------------------------------------------
 # SECURITY
@@ -198,8 +166,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles_collected"
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 3600  # increase to a year (31536000) once stable
-
+SECURE_HSTS_SECONDS = 3600  # verhogen naar 31536000 na stabiel
 
 # ------------------------------------------------------------------------------
 # EMAIL
@@ -213,15 +180,13 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 
-
 # ------------------------------------------------------------------------------
-# OTHER SETTINGS
+# OVERIG
 # ------------------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# ensure pdflatex is on PATH for any TeX subprocess calls
+# zorg dat pdflatex in PATH staat voor TeX subprocess calls
 os.environ["PATH"] += os.pathsep + "/usr/bin/pdflatex"
-
 
 # ------------------------------------------------------------------------------
 # LOGGING

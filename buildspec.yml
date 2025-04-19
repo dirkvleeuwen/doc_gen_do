@@ -1,21 +1,29 @@
 version: 0.2
 
+env:
+  variables:
+    CI: "true"
+
 phases:
   install:
     runtime-versions:
       python: 3.12
     commands:
       - python -m venv .venv
+
   pre_build:
     commands:
-      - . .venv/bin/activate        # activeer venv
+      - . .venv/bin/activate
       - pip install --upgrade pip
       - pip install -r requirements.txt
+
   build:
     commands:
-      - . .venv/bin/activate        # opnieuw activeren
+      - . .venv/bin/activate
+      - python manage.py migrate --noinput
       - python manage.py collectstatic --noinput
       - pytest --maxfail=1 --disable-warnings -q
-  post_build:
-    commands:
-      - echo "Done on `date`"
+
+artifacts:
+  files:
+    - staticfiles/**/*     # optioneel: bewaar je verzamelde static assets als artefact
