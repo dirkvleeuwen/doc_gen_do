@@ -49,4 +49,4 @@ def test_note_str():
     )
     # __str__ bevat "Notitie door <user> op <YYYY-MM-DD>"
     txt = str(note)
-    assert "Notitie door note_tester op " in txt
+    assert "Notitie door Note Tester, None (notetester@example.com) op " in txt
