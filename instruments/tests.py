@@ -12,9 +12,10 @@ def test_instrumentsubmission_str():
 
     # 1) Maak een user mét email aan
     user = User.objects.create_user(
-        username="tester",
         email="tester@example.com",
-        password="secret"
+        password="secret",
+        initials="A.",
+	last_name="Tester"
     )
     sub = InstrumentSubmission.objects.create(
         owner=user,
