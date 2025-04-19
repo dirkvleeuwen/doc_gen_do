@@ -1,5 +1,6 @@
-version: 0.0
+version: 0.1
 os: linux
+file_exists_behavior: OVERWRITE
 files:
   - source: /
     destination: /home/ubuntu/instrument_generator
