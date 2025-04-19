@@ -2,13 +2,20 @@ import pytest
 from django.contrib.auth import get_user_model
 from instruments.models import InstrumentSubmission, Note
 from datetime import date
+from django.utils import timezone
 
 User = get_user_model()
 
 @pytest.mark.django_db
 def test_instrumentsubmission_str():
     # Maak een dummy user en een submission met vaste datum
-    user = User.objects.create_user(username="tester", password="secret")
+
+    # 1) Maak een user mét email aan
+    user = User.objects.create_user(
+        username="tester",
+        email="tester@example.com",
+        password="secret"
+    )
     sub = InstrumentSubmission.objects.create(
         owner=user,
         instrument="Guitar",
