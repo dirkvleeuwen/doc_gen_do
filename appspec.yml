@@ -6,6 +6,8 @@ files:
     destination: /home/ubuntu/instrument_generator
   - source: deploy/nginx/instrument_generator.conf
     destination: /etc/nginx/sites-enabled/instrument_generator
+  - source: .env
+    destination: /home/ubuntu/instrument_generator
 hooks:
   BeforeInstall:
     - location: scripts/stop_app.sh
