@@ -1,29 +1,20 @@
 version: 0.2
 
-env:
-  variables:
-    CI: "true"
-
 phases:
   install:
     runtime-versions:
       python: 3.12
     commands:
       - python -m venv .venv
-
   pre_build:
     commands:
       - . .venv/bin/activate
       - pip install --upgrade pip
       - pip install -r requirements.txt
-
   build:
     commands:
       - . .venv/bin/activate
-      - python manage.py migrate --noinput
-      - python manage.py collectstatic --noinput
       - pytest --maxfail=1 --disable-warnings -q
-
-artifacts:
-  files:
-    - staticfiles/**/*
+  post_build:
+    commands:
+      - echo "Tests afgerond op $(date)"

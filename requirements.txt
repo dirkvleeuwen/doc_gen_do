@@ -23,6 +23,7 @@ pycparser==2.22
 pydyf==0.11.0
 pyphen==0.17.2
 pytest>=7.4.0
+pytest-django
 python-dateutil==2.9.0.post0
 python-docx==1.1.2
 python-dotenv==1.1.0
