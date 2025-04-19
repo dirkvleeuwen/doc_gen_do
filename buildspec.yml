@@ -11,6 +11,8 @@ phases:
       - . .venv/bin/activate
       - pip install --upgrade pip
       - pip install -r requirements.txt
+      - echo "Generate .env from SSM parameters"
+      - python create_dot_env.py
   build:
     commands:
       - . .venv/bin/activate
@@ -20,4 +22,9 @@ post_build:
     - echo "Build en tests afgerond op $(date)"
 artifacts:
   files:
+    - appspec.yml
+    - scripts/**/*
+    - deploy/**/*
+    - '**/*.py'
+    - '.env'
     - '**/*'
