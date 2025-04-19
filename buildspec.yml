@@ -5,24 +5,18 @@ phases:
     runtime-versions:
       python: 3.12
     commands:
-      - echo "----- Create virtualenv and install deps -----"
       - python -m venv .venv
-      - .venv/bin/pip install --upgrade pip
-      - .venv/bin/pip install -r requirements.txt
-
   pre_build:
     commands:
-      - echo "----- Running tests -----"
-      # Hier gebruik je de venv‑pytest, niet 'pytest' alleen:
-      - .venv/bin/pytest --maxfail=1 --disable-warnings -q
-
+      - . .venv/bin/activate        # activeer venv
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
   build:
     commands:
-      - echo "----- Build complete, packaging artifact -----"
-
-artifacts:
-  files:
-    - appspec.yml
-    - scripts/**/*
-    - "**/*"
-  discard-paths: no
+      - . .venv/bin/activate        # opnieuw activeren
+      - python manage.py migrate --noinput
+      - python manage.py collectstatic --noinput
+      - pytest --maxfail=1 --disable-warnings -q
+  post_build:
+    commands:
+      - echo "Done on `date`"
