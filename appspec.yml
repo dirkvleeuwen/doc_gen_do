@@ -3,6 +3,7 @@ os: linux
 files:
   - source: /
     destination: /home/ubuntu/instrument_generator
+    overwrite: true
 hooks:
   BeforeInstall:
     - location: scripts/stop_app.sh
