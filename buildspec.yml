@@ -26,4 +26,4 @@ phases:
 
 artifacts:
   files:
-    - staticfiles/**/*     # optioneel: bewaar je verzamelde static assets als artefact
+    - staticfiles/**/*

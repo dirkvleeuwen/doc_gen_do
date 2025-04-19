@@ -14,8 +14,12 @@ import os
 from pathlib import Path
 from django.urls import reverse_lazy
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ------------------------------------------------------------------------------
+# BASE DIR & CI DETECTIE
+# ------------------------------------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_CI = os.getenv("CI", "false").lower() == "true"
 
 # ------------------------------------------------------------------------------
 # SECURITY & DEBUG
@@ -28,7 +32,6 @@ if not SECRET_KEY and os.getenv("DJANGO_ENV") == "production":
 DEBUG = os.getenv("DEBUG", "False") == "True"
 allowed_hosts = os.getenv("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(",") if h.strip()]
-
 if DEBUG and not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
@@ -39,23 +42,20 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ------------------------------------------------------------------------------
-# APPLICATIONS
+# APPLICATIONS & MIDDLEWARE
 # ------------------------------------------------------------------------------
 
 INSTALLED_APPS = [
-    # Django core
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Your apps
     "instruments",
     "accounts",
     "mailer",
     "widget_tweaks",
-    # Third‑party
     "storages",
 ]
 
@@ -71,38 +71,44 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "instrument_generator.urls"
-
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
 WSGI_APPLICATION = "instrument_generator.wsgi.application"
 
+TEMPLATES = [{
+    "BACKEND": "django.template.backends.django.DjangoTemplates",
+    "DIRS": [BASE_DIR / "templates"],
+    "APP_DIRS": True,
+    "OPTIONS": {
+        "context_processors": [
+            "django.template.context_processors.request",
+            "django.contrib.auth.context_processors.auth",
+            "django.contrib.messages.context_processors.messages",
+        ],
+    },
+}]
+
 # ------------------------------------------------------------------------------
-# DATABASE
+# DATABASES (SQLite in CI, PostgreSQL elders)
 # ------------------------------------------------------------------------------
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT", "5432"),
+if IS_CI:
+    # gebruik een simpele lokale SQLite DB in CodeBuild
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "ci_db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+        }
+    }
 
 # ------------------------------------------------------------------------------
 # AUTHENTICATION
@@ -113,10 +119,6 @@ AUTHENTICATION_BACKENDS = ["accounts.auth_backends.ApprovedUserBackend"]
 LOGIN_URL = reverse_lazy("accounts:login")
 LOGIN_REDIRECT_URL = "/instruments/submissions/"
 LOGOUT_REDIRECT_URL = "/instruments/submissions/"
-
-# ------------------------------------------------------------------------------
-# PASSWORD VALIDATION
-# ------------------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -135,19 +137,14 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------------------------------------------------------
-# STATICFILES STORAGE (lokale FS tijdens CI, S3 in prod)
+# STATICFILES STORAGE (lokaal in CI, S3 in prod)
 # ------------------------------------------------------------------------------
 
-# detecteer CI-omgeving via env var
-IS_CI = os.getenv("CI", "false").lower() == "true"
-
 if IS_CI:
-    # tijdens CodeBuild: lokaal opslaan
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
     STATIC_URL = "/static/"
     STATIC_ROOT = BASE_DIR / "staticfiles"
 else:
-    # productie: S3
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
     AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "eu-central-1")
     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
@@ -161,16 +158,12 @@ else:
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
 
 # ------------------------------------------------------------------------------
-# SECURITY
+# EMAIL & OVERIG
 # ------------------------------------------------------------------------------
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 3600  # verhogen naar 31536000 na stabiel
-
-# ------------------------------------------------------------------------------
-# EMAIL
-# ------------------------------------------------------------------------------
+SECURE_HSTS_SECONDS = 3600
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "mail.privateemail.com"
@@ -180,17 +173,8 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 
-# ------------------------------------------------------------------------------
-# OVERIG
-# ------------------------------------------------------------------------------
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# zorg dat pdflatex in PATH staat voor TeX subprocess calls
 os.environ["PATH"] += os.pathsep + "/usr/bin/pdflatex"
-
-# ------------------------------------------------------------------------------
-# LOGGING
-# ------------------------------------------------------------------------------
 
 LOGGING = {
     "version": 1,
