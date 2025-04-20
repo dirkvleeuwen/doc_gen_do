@@ -21,9 +21,9 @@ phases:
     commands:
       - . .venv/bin/activate
       - pytest --maxfail=1 --disable-warnings -q
-post_build:
-  commands:
-    - echo "Build en tests afgerond op $(date)"
+  post_build:
+    commands:
+      - echo "Build en tests afgerond op $(date)"
 artifacts:
   files:
     - appspec.yml
@@ -32,3 +32,4 @@ artifacts:
     - '**/*.py'
     - '.env'
     - '**/*'
+  discard-paths: no
