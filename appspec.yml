@@ -4,8 +4,6 @@ file_exists_behavior: OVERWRITE
 files:
   - source: ""
     destination: /home/ubuntu/instrument_generator
-  - source: .env
-    destination: /home/ubuntu/instrument_generator
   - source: deploy/nginx/instrument_generator.conf
     destination: /etc/nginx/sites-enabled/instrument_generator
 hooks:
