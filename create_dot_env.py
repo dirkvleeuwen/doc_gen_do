@@ -15,6 +15,7 @@ params_to_fetch = [
     '/instrument_generator/prod/DEBUG',
     '/instrument_generator/prod/AWS_STORAGE_BUCKET_NAME', # Voeg toe indien nodig
     '/instrument_generator/prod/AWS_REGION', # Voeg toe indien nodig
+    '/instrument_generator/prod/AWS_S3_REGION_NAME',
     # Voeg andere parameters toe...
 ]
 
