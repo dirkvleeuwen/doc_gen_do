@@ -50,26 +50,34 @@ def create_admin_user():
     try:
         from accounts.models import CustomUser, Party
         print("Models imported successfully.")
+        # Controleer of er al een superuser bestaat
+        if CustomUser.objects.filter(is_superuser=True).exists():
+            print("A superuser already exists. Aborting creation of admin user.")
+            return
     except Exception as e:
          print(f"Error importing models: {e}")
          sys.exit(1)
 
-
-    # Controleer of gebruiker al bestaat
-    if CustomUser.objects.filter(email=ADMIN_EMAIL).exists():
-        print(f"User with email {ADMIN_EMAIL} already exists.")
-        return
+    ADMIN_EMAIL = os.environ['ADMIN_EMAIL']
+    ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
+    ADMIN_INITIALEN = os.environ['ADMIN_INITIALEN']
+    ADMIN_ACHTERNAAM = os.environ['ADMIN_ACHTERNAAM']
 
     # Haal het Party object op
     try:
         party_object = Party.objects.get(pk=ADMIN_PARTY_ID)
         print(f"Found party: {party_object.name} (ID: {party_object.pk})")
     except Party.DoesNotExist:
-        print(f"ERROR: Party with ID {ADMIN_PARTY_ID} not found in the database.")
-        print("Please create the party first or correct ADMIN_PARTY_ID.")
-        return
+        print(f"Party with ID {ADMIN_PARTY_ID} not found. Creating new party 'Admin Party' with ID {ADMIN_PARTY_ID}.")
+        party_object = Party.objects.create(pk=ADMIN_PARTY_ID, name="Admin Party")
+        print(f"Created party: {party_object.name} (ID: {party_object.pk})")
     except Exception as e:
-        print(f"Error fetching party: {e}")
+        print(f"Error fetching or creating party: {e}")
+        return
+
+    # Controleer of gebruiker al bestaat
+    if CustomUser.objects.filter(email=ADMIN_EMAIL).exists():
+        print(f"User with email {ADMIN_EMAIL} already exists.")
         return
 
     # Maak de gebruiker aan en stel velden daarna in
