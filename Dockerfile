@@ -1,5 +1,5 @@
 # Gebruik officieel Python-beeld
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Werkdirectory
 WORKDIR /app
