@@ -8,6 +8,8 @@ from django.template.loader import render_to_string
 from docxtpl import DocxTemplate
 from weasyprint import HTML
 from instruments.exports.compose_text import process_gui_data
+import logging
+logger = logging.getLogger(__name__)
 
 
 def generate_export_file(submission, export_type):
@@ -55,21 +57,60 @@ def generate_export_file(submission, export_type):
         tex = render_to_string("instruments/previews/template.tex", data)
         return "instrument.tex", tex.encode("utf-8"), "application/x-tex"
 
+    # elif export_type == "latex":
+    #     tex_string = render_to_string("instruments/previews/template.tex", data)
+    #     with tempfile.TemporaryDirectory() as tmpdir:
+    #         tex_path = Path(tmpdir) / "instrument.tex"
+    #         pdf_path = Path(tmpdir) / "instrument.pdf"
+    #         tex_path.write_text(tex_string, encoding="utf-8")
+
+    #         logo_src = Path("instruments/templates/instruments/previews/images/Logo-Gemeente-Amsterdam.png")
+    #         shutil.copy(logo_src, Path(tmpdir) / logo_src.name)
+
+    #         subprocess.run(
+    #             ["pdflatex", "-interaction=nonstopmode", "-output-directory", tmpdir, str(tex_path)],
+    #             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    #         )
+    #         content = pdf_path.read_bytes()
+    #     return "instrument_latex.pdf", content, "application/pdf"
+    
     elif export_type == "latex":
         tex_string = render_to_string("instruments/previews/template.tex", data)
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tex_path = Path(tmpdir) / "instrument.tex"
             pdf_path = Path(tmpdir) / "instrument.pdf"
+
             tex_path.write_text(tex_string, encoding="utf-8")
 
-            logo_src = Path("instruments/templates/instruments/previews/images/Logo-Gemeente-Amsterdam.png")
+            # logo mee kopiëren
+            logo_src = Path(
+                "instruments/templates/instruments/previews/images/Logo-Gemeente-Amsterdam.png"
+            )
             shutil.copy(logo_src, Path(tmpdir) / logo_src.name)
 
-            subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "-output-directory", tmpdir, str(tex_path)],
-                check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
+            cmd = [
+                "pdflatex",
+                "-interaction=nonstopmode",
+                "-file-line-error",        # duidelijkere foutregels
+                "-output-directory", tmpdir,
+                str(tex_path),
+            ]
+
+            # Meestal twee keer compileren i.v.m. referenties
+            for i in range(2):
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode != 0:
+                    logger.error(
+                        "LaTeX compile-fout (run %d):\n%s",
+                        i + 1,
+                        result.stdout + result.stderr,
+                    )
+                    # Geef een nette exceptie terug – wordt door Django afgevangen
+                    raise RuntimeError("LaTeX compilatie mislukt, zie server-log voor details")
+
             content = pdf_path.read_bytes()
+
         return "instrument_latex.pdf", content, "application/pdf"
 
     else:
