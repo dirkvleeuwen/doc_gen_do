@@ -16,4 +16,4 @@ COPY . .
 
 # Expose en start
 EXPOSE 8000
-CMD ["gunicorn", "--workers", "3", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "--workers", "3", "instrument_generator.wsgi:application", "--bind", "0.0.0.0:8000"]
