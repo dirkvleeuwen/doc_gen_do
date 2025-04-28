@@ -14,9 +14,10 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 if not SECRET_KEY:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY ontbreekt in je environment")
 
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")
-if not DEBUG:
+debug_env = os.environ.get("DEBUG")
+if debug_env is None:
     raise ImproperlyConfigured("DEBUG ontbreekt in je environment")
+DEBUG = debug_env.lower() in ("1", "true", "yes")
 
 hosts = os.environ.get("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [h.strip() for h in hosts.split(",") if h.strip()] or ["*"]
