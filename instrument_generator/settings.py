@@ -24,16 +24,6 @@ ALLOWED_HOSTS = [h.strip() for h in hosts.split(",") if h.strip()] or ["*"]
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS ontbreekt in je environment")
 
-# SECRET_KEY = os.getenv("SECRET_KEY")
-# if not SECRET_KEY and os.getenv("DJANGO_ENV") == "production":
-#     raise ValueError("No SECRET_KEY set for production environment!")
-
-# DEBUG = os.getenv("DEBUG", "False") == "True"
-# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "")
-# ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(",") if h.strip()]
-# if DEBUG and not ALLOWED_HOSTS:
-#     ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-
 CSRF_TRUSTED_ORIGINS = [
     "https://jouwdomein.nl",
     "https://www.jouwdomein.nl",
@@ -53,26 +43,6 @@ DATABASES = {
         "OPTIONS": {"sslmode": "require"},
     }
 }
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.environ["DB_NAME"],
-#         "USER": os.environ["DB_USER"],
-#         "PASSWORD": os.environ["DB_PASSWORD"],
-#         "HOST": os.environ["DB_HOST"],
-#         "PORT": os.environ["DB_PORT", "5432"],
-#         # eventueel TEST overrides
-#         "TEST": {"MIRROR": None},
-#     }
-# }
-
-# # Tijdens pytest draaien: overschrijf naar in-memory sqlite
-# if any("pytest" in arg for arg in sys.argv):
-#     DATABASES["default"] = {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": ":memory:",
-#     }
 
 # ------------------------------------------------------------------------------
 # APPLICATIONS & MIDDLEWARE
@@ -119,25 +89,8 @@ LOGIN_REDIRECT_URL = "/instruments/submissions/"
 LOGOUT_REDIRECT_URL = "/instruments/submissions/"
 
 # -------------------------------------------------------------------------------
-# STORAGES (Django ≥4.2 API) – Static files on S3
+# STATIC
 # -------------------------------------------------------------------------------
-# STORAGES = {
-#     "staticfiles": {
-#         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-#         "OPTIONS": {
-#             "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-#             "region_name": os.getenv("AWS_S3_REGION_NAME", "eu-central-1"),
-#             "location": "static",
-#             "object_parameters": {"CacheControl": "max-age=86400"},
-#             "file_overwrite": True,
-#             "querystring_auth": False,
-#             "custom_domain": (
-#                 f"{os.getenv('AWS_STORAGE_BUCKET_NAME')}"
-#                 f".s3.{os.getenv('AWS_S3_REGION_NAME','eu-central-1')}.amazonaws.com"
-#             ),
-#         },
-#     },
-# }
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles_collected"
