@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-base \
     texlive-fonts-recommended \
     texlive-latex-extra \
+    texlive-fonts-extra \
   && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
