@@ -10,7 +10,6 @@ ADMIN_EMAIL = 'admin@doc-gen.eu'
 ADMIN_PASSWORD = 'ZjonG4J2!' # Kies een sterk, uniek wachtwoord!
 ADMIN_INITIALEN = 'D.J.'
 ADMIN_ACHTERNAAM = 'van Leeuwen'
-ADMIN_PARTY_ID = 1  # Het ID van de Party die je wilt koppelen (bv. 'Admin Party')
 # --- EINDE CONFIGURATIE ---
 
 def setup_django():
@@ -63,17 +62,12 @@ def create_admin_user():
     ADMIN_INITIALEN = os.environ['ADMIN_INITIALEN']
     ADMIN_ACHTERNAAM = os.environ['ADMIN_ACHTERNAAM']
 
-    # Haal het Party object op
-    try:
-        party_object = Party.objects.get(pk=ADMIN_PARTY_ID)
-        print(f"Found party: {party_object.name} (ID: {party_object.pk})")
-    except Party.DoesNotExist:
-        print(f"Party with ID {ADMIN_PARTY_ID} not found. Creating new party 'Admin Party' with ID {ADMIN_PARTY_ID}.")
-        party_object = Party.objects.create(pk=ADMIN_PARTY_ID, name="Admin Party")
+    # Fetch or create the 'Admin Party' by name, letting the database assign the ID
+    party_object, created = Party.objects.get_or_create(name="Admin Party")
+    if created:
         print(f"Created party: {party_object.name} (ID: {party_object.pk})")
-    except Exception as e:
-        print(f"Error fetching or creating party: {e}")
-        return
+    else:
+        print(f"Found party: {party_object.name} (ID: {party_object.pk})")
 
     # Controleer of gebruiker al bestaat
     if CustomUser.objects.filter(email=ADMIN_EMAIL).exists():
@@ -93,7 +87,7 @@ def create_admin_user():
         user.is_staff = True
         user.is_superuser = True
         user.is_active = True
-        user.is_approved = True # Waarschijnlijk wil je dit ook voor de admin?
+        user.is_approved = True
 
         # Stel de custom velden in
         user.initials = ADMIN_INITIALEN
