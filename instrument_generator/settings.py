@@ -114,10 +114,11 @@ TIME_ZONE = "Europe/Amsterdam"
 USE_I18N = True
 USE_TZ = True
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # PATH voor pdflatex
@@ -157,3 +158,18 @@ TEMPLATES = [
         },
     },
 ]
+
+# Development overrides for local testing
+if DEBUG:
+    # Disable SSL redirect and secure cookies in development
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+    # Disable HSTS so browser geen HTTPS afdwingt
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+
+    # Use console email backend to avoid SMTP requirement
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
