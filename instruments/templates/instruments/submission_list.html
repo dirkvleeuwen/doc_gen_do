@@ -171,6 +171,16 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal-{{ submission.pk }}" title="E-mail opties">
                           <i class="bi bi-envelope"></i>
                         </button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-success share-button"
+                            data-pk="{{ submission.pk }}"
+                            data-subject="{{ submission.subject|escapejs }}"
+                            data-preview="{{ submission.preview|escapejs }}"
+                            title="Delen"
+                          >
+                            <i class="bi bi-share"></i>
+                          </button>
                          <a href="{% url 'instrument_submission_delete' submission.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
                           <i class="bi bi-trash"></i>
                         </a>
@@ -405,4 +415,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.share-button');
+    if (!navigator.share) {
+      buttons.forEach(btn => btn.style.display = 'none');
+      return;
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const subject = btn.getAttribute('data-subject');
+        const preview = btn.getAttribute('data-preview');
+        // Vervang unicode escapes voor newline door echte enters
+        const cleanPreview = preview.replace(/\\u000A/g, '\n');
+        const pk      = btn.getAttribute('data-pk');
+        // Bouw de detail-URL (relatief)
+        const url     = window.location.origin +
+                        "{% url 'instrument_submission_detail' 0 %}".replace('0', pk);
+
+        navigator.share({
+          title: subject,
+          text: cleanPreview
+        }).catch(console.error);
+      });
+    });
+  });
+  </script>
+  
 {% endblock %}

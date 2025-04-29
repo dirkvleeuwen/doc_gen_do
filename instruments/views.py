@@ -198,6 +198,26 @@ class InstrumentSubmissionListView(ListView):
         context['email_export_options'] = EMAIL_OPTIONS
         context['download_export_options'] = DOWNLOAD_OPTIONS
 
+        # context['submissions'] is een Paginator Page of lijst van submissions
+        for submission in context['submissions']:
+            table_data = [
+                [s.initials, s.lastname, s.party]
+                for s in submission.submitters.all()
+            ]
+            preview_data = process_gui_data(
+                table_data=table_data,
+                instrument=submission.instrument,
+                subject=submission.subject,
+                date_str=str(submission.date),
+                considerations=submission.considerations,
+                requests=submission.requests,
+            )
+            # render_to_string haalt hetzelfde template als in detailview
+            submission.preview = render_to_string(
+                "instruments/previews/template.txt",
+                preview_data
+            )
+
         return context
 
 

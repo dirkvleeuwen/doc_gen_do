@@ -20,6 +20,9 @@
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
             <i class="bi bi-envelope"></i> E-mail
         </button>
+        <button type="button" id="shareButton" class="btn btn-sm btn-outline-success" title="Delen">
+            <i class="bi bi-share"></i> Delen
+        </button>
     </div>
 </div>
     <div class="card-body">
@@ -190,5 +193,24 @@
       </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var shareBtn = document.getElementById('shareButton');
+    if (navigator.share) {
+        var shareText = `{{ preview|escapejs }}`;
+        shareBtn.addEventListener('click', function() {
+            navigator.share({
+                title: "{{ object.subject }}",
+                text: shareText
+            }).catch(function(error) {
+                console.error('Error sharing:', error);
+            });
+        });
+    } else {
+        shareBtn.style.display = 'none';
+    }
+});
+</script>
 
 {% endblock %}
