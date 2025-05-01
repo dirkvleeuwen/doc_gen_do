@@ -429,8 +429,10 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.addEventListener('click', function() {
         const subject = btn.getAttribute('data-subject');
         const preview = btn.getAttribute('data-preview');
-        // Vervang unicode escapes voor newline door echte enters
-        const cleanPreview = preview.replace(/\\u000A/g, '\n');
+        // Decodeer alle \uXXXX escapes in echte karakters
+        const cleanPreview = preview.replace(/\\u([0-9A-Fa-f]{4})/g, (match, grp) => {
+          return String.fromCharCode(parseInt(grp, 16));
+        });
         const pk      = btn.getAttribute('data-pk');
         // Bouw de detail-URL (relatief)
         const url     = window.location.origin +
