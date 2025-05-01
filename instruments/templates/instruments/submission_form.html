@@ -7,7 +7,19 @@
 <div class="card mx-auto mb-4" style="max-width: 800px;">
   <div class="card-header d-flex justify-content-between align-items-center">
     {# Titel: Bewerken of Nieuw #}
-    <h1 class="h4 mb-0">{% if object %}Bewerk instrument{% else %}Nieuw instrument{% endif %}</h1>
+    <h1 class="h4 mb-0"><span id="form-title">
+      {% if object %}
+        Bewerk instrument: {{ object.subject }}
+      {% else %}
+        {% with new_subject=form.subject.value %}
+          {% if new_subject %}
+            Nieuw instrument: {{ new_subject }}
+          {% else %}
+            Nieuw instrument
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </span></h1>
 
     {# TOEGEVOEGD: Knoppen voor Bekijk/Verwijder alleen bij bewerken #}
     {% if object %}
@@ -197,6 +209,25 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error("Could not extract new form wrapper from template HTML.");
         }
     });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var subjectInput = document.getElementById('{{ form.subject.id_for_label }}');
+  var titleSpan = document.getElementById('form-title');
+  var isEdit = {% if object %}true{% else %}false{% endif %};
+  var editPrefix = 'Bewerk instrument: ';
+  var newPrefix = 'Nieuw instrument: ';
+  if (subjectInput && titleSpan) {
+    subjectInput.addEventListener('input', function() {
+      var value = this.value.trim();
+      if (value) {
+        titleSpan.textContent = (isEdit ? editPrefix : newPrefix) + value;
+      } else {
+        titleSpan.textContent = isEdit ? editPrefix.trim() : newPrefix.trim();
+      }
+    });
+  }
 });
 </script>
 {% endblock %}
