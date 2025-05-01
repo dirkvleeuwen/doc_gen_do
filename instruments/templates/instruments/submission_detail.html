@@ -79,7 +79,7 @@
 
         {# Formulier voor nieuwe notitie #}
         {% if user.is_authenticated %}
-        <hr class="my-4"> {# Scheidingslijn boven het formulier #}
+
         <form method="post" action="{% url 'instrument_submission_detail' object.pk %}" class="mt-3"> {# Action toegevoegd #}
             {% csrf_token %}
 
