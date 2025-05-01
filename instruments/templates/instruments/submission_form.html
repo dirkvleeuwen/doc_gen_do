@@ -53,16 +53,42 @@
       {% endif %}
       {% for field in form.visible_fields %}
         <div class="mb-3">
-          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          {% if field.field.widget.input_type == 'select' %}
-              {% render_field field class="form-select" %}
-          {% elif field.field.widget.input_type == 'checkbox' %}
-              <div class="form-check">
-                  {% render_field field class="form-check-input" %}
-                  <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
-              </div>
+          {% if field.name == 'instrument' %}
+            <div class="form-floating mb-3">
+              {% render_field field class="form-control" placeholder=field.label %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+          {% elif field.name == 'subject' %}
+            <div class="form-floating mb-3">
+              {% render_field field class="form-control" placeholder=field.label %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+          {% elif field.name == 'date' %}
+            <div class="form-floating mb-3">
+              {% render_field field class="form-control" placeholder=field.label %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+         {% elif field.name == 'considerations' %}
+           <div class="form-floating mb-3">
+             {% render_field field class="form-control auto-resize-textarea" placeholder=field.label style="min-height: 100px" %}
+             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+           </div>
+         {% elif field.name == 'requests' %}
+           <div class="form-floating mb-3">
+             {% render_field field class="form-control auto-resize-textarea" placeholder=field.label style="min-height: 100px" %}
+             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+           </div>
           {% else %}
-              {% render_field field class="form-control" %}
+            {% if field.field.widget.input_type == 'select' %}
+                {% render_field field class="form-select" %}
+            {% elif field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check">
+                    {% render_field field class="form-check-input" %}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+                </div>
+            {% else %}
+                {% render_field field class="form-control" %}
+            {% endif %}
           {% endif %}
           {% if field.help_text %}
             <div class="form-text">{{ field.help_text|safe }}</div>
@@ -234,6 +260,18 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.auto-resize-textarea').forEach(function(textarea) {
+    function resize() {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+    textarea.addEventListener('input', resize);
+    resize();
+  });
 });
 </script>
 {% endblock %}
