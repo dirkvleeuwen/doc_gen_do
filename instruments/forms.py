@@ -20,6 +20,48 @@ class InstrumentSubmissionForm(forms.ModelForm):
             'date': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Bepaal instrument-type via instance of initial data
+        instrument = None
+        if hasattr(self.instance, 'instrument') and self.instance.instrument:
+            instrument = self.instance.instrument
+        elif 'instrument' in self.initial:
+            instrument = self.initial['instrument']
+
+        # Condioneel labels instellen per instrument
+        if instrument == 'Mondelinge vragen':
+            self.fields['instrument'].label = 'Instrument'
+            self.fields['date'].label = 'Datum vergadering'
+            self.fields['subject'].label = 'Onderwerp'
+            self.fields['considerations'].label = 'Toelichting'
+            self.fields['requests'].label = 'Vragen'
+        elif instrument == 'Schriftelijke vragen':
+            self.fields['instrument'].label = 'Instrument'
+            self.fields['date'].label = 'Datum indiening'
+            self.fields['subject'].label = 'Onderwerp'
+            self.fields['considerations'].label = 'Toelichting'
+            self.fields['requests'].label = 'Vragen'
+        elif instrument == 'Agendapunt' or instrument == 'Actualiteit':
+            self.fields['instrument'].label = 'Instrument'
+            self.fields['date'].label = 'Datum'
+            self.fields['subject'].label = 'Onderwerp'
+            self.fields['considerations'].label = 'Toelichting'
+            self.fields['requests'].label = 'Vragen/verzoeken [niet van toepassing bij agendapunten/actualiteiten]'
+        elif instrument == 'Motie':
+            self.fields['instrument'].label = 'Instrument'
+            self.fields['date'].label = 'Datum vergadering'
+            self.fields['subject'].label = 'Onderwerp'
+            self.fields['considerations'].label = 'Overwegingen'
+            self.fields['requests'].label = 'Verzoeken'
+        else:
+            # Standaard labels
+            self.fields['instrument'].label = 'Instrument'
+            self.fields['date'].label = 'Datum'
+            self.fields['subject'].label = 'Onderwerp'
+            self.fields['considerations'].label = 'Toelichting/overwegingen'
+            self.fields['requests'].label = 'Vragen/verzoeken'
+
 
 # Inline formset om meerdere Submitters tegelijk toe te voegen
 SubmitterFormSet = inlineformset_factory(
