@@ -47,7 +47,9 @@ class InstrumentSubmissionForm(forms.ModelForm):
             self.fields['date'].label = 'Datum'
             self.fields['subject'].label = 'Onderwerp'
             self.fields['considerations'].label = 'Toelichting'
-            self.fields['requests'].label = 'Vragen/verzoeken [niet van toepassing bij agendapunten/actualiteiten]'
+            from django import forms  # ensure import is present at top if not already
+            self.fields['requests'].widget = forms.HiddenInput()
+            self.fields['requests'].label = ''
         elif instrument == 'Motie':
             self.fields['instrument'].label = 'Instrument'
             self.fields['date'].label = 'Datum vergadering'
