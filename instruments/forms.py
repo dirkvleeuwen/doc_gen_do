@@ -64,6 +64,9 @@ class InstrumentSubmissionForm(forms.ModelForm):
             self.fields['considerations'].label = 'Toelichting/overwegingen'
             self.fields['requests'].label = 'Vragen/verzoeken'
 
+    class Media:
+        js = ('instruments/js/instrument_form.js',)
+
 
 # Inline formset om meerdere Submitters tegelijk toe te voegen
 SubmitterFormSet = inlineformset_factory(
