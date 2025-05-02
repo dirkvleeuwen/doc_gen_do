@@ -57,18 +57,6 @@
       {% endif %}
     </span></h1>
 
-    {# TOEGEVOEGD: Knoppen voor Bekijk/Verwijder alleen bij bewerken #}
-    {% if object %}
-      <div>
-        <a href="{% url 'instrument_submission_detail' object.pk %}" class="btn btn-sm btn-outline-secondary" title="Bekijk Details">
-          <i class="bi bi-eye"></i> Bekijk
-        </a>
-        <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijder Indiening">
-          <i class="bi bi-trash"></i> Verwijder
-        </a>
-      </div>
-    {% endif %}
-    {# EINDE TOEGEVOEGD #}
 
   </div>
   <div class="card-body">
@@ -224,6 +212,11 @@
         <a href="{% url 'instrument_submission_list' %}" class="btn btn-outline-secondary">
           <i class="bi bi-x-lg"></i> Annuleren
         </a>
+        {% if object %}
+          <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Verwijder
+          </a>
+        {% endif %}
       </div>
     </form>
   </div>
