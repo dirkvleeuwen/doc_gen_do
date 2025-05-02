@@ -15,13 +15,43 @@
     {# Titel: Bewerken of Nieuw #}
     <h1 class="h4 mb-0"><span id="form-title">
       {% if object %}
-        Bewerk instrument: {{ object.subject }}
+        {% if object.instrument.name == "Schriftelijke vragen" %}
+          {{ object.instrument }} van {{ object.date|date:"j F Y" }} inzake {{ object.subject }}
+        {% else %}
+          {{ object.instrument }} voor de vergadering van {{ object.date|date:"j F Y" }} inzake {{ object.subject }}
+        {% endif %}
       {% else %}
-        {% with new_subject=form.subject.value %}
-          {% if new_subject %}
-            Nieuw instrument: {{ new_subject }}
-          {% else %}
-            Nieuw instrument
+        {% with instr=form.instrument.value date=form.date.value subj=form.subject.value %}
+          {% if instr and date and subj %}
+            {% if instr == "Schriftelijke vragen" %}
+              {{ instr }} van {{ date }} inzake {{ subj }}
+            {% else %}
+              {{ instr }} voor de vergadering van {{ date }} inzake {{ subj }}
+            {% endif %}
+          {% elif instr and date %}
+            {% if instr == "Schriftelijke vragen" %}
+              {{ instr }} van {{ date }}
+            {% else %}
+              {{ instr }} voor de vergadering van {{ date }}
+            {% endif %}
+          {% elif instr and subj %}
+            {{ instr }} inzake {{ subj }}
+          {% elif date and subj %}
+            {% if instr == "Schriftelijke vragen" %}
+              van {{ date }} inzake {{ subj }}
+            {% else %}
+              voor de vergadering van {{ date }} inzake {{ subj }}
+            {% endif %}
+          {% elif instr %}
+            {{ instr }}
+          {% elif date %}
+            {% if instr == "Schriftelijke vragen" %}
+              van {{ date }}
+            {% else %}
+              voor de vergadering van {{ date }}
+            {% endif %}
+          {% elif subj %}
+            inzake {{ subj }}
           {% endif %}
         {% endwith %}
       {% endif %}
@@ -245,21 +275,65 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var instrumentSelect = document.getElementById('{{ form.instrument.id_for_label }}');
   var subjectInput = document.getElementById('{{ form.subject.id_for_label }}');
+  var dateInput = document.getElementById('{{ form.date.id_for_label }}');
   var titleSpan = document.getElementById('form-title');
-  var isEdit = {% if object %}true{% else %}false{% endif %};
-  var editPrefix = 'Bewerk instrument: ';
-  var newPrefix = 'Nieuw instrument: ';
-  if (subjectInput && titleSpan) {
-    subjectInput.addEventListener('input', function() {
-      var value = this.value.trim();
-      if (value) {
-        titleSpan.textContent = (isEdit ? editPrefix : newPrefix) + value;
-      } else {
-        titleSpan.textContent = isEdit ? editPrefix.trim() : newPrefix.trim();
-      }
-    });
+  function formatDate(value) {
+    const months = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+    const parts = value.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      // Remove any leading zero from day
+      const d = parseInt(day, 10);
+      return d + ' ' + months[parseInt(month, 10) - 1] + ' ' + year;
+    }
+    return value;
   }
+  function updateTitle() {
+    var instrValue = instrumentSelect.value;
+    var instrText = instrumentSelect.options[instrumentSelect.selectedIndex]?.text || '';
+    var rawDate = dateInput.value.trim();
+    var dateValue = rawDate ? formatDate(rawDate) : '';
+    var subj = subjectInput.value.trim();
+    if (instrValue && dateValue && subj) {
+      if (instrText === 'Schriftelijke vragen') {
+        titleSpan.textContent = instrText + ' van ' + dateValue + ' inzake ' + subj;
+      } else {
+        titleSpan.textContent = instrText + ' voor de vergadering van ' + dateValue + ' inzake ' + subj;
+      }
+    } else if (instrValue && dateValue) {
+      if (instrText === 'Schriftelijke vragen') {
+        titleSpan.textContent = instrText + ' van ' + dateValue;
+      } else {
+        titleSpan.textContent = instrText + ' voor de vergadering van ' + dateValue;
+      }
+    } else if (instrValue && subj) {
+      titleSpan.textContent = instrText + ' inzake ' + subj;
+    } else if (dateValue && subj) {
+      if (instrText === 'Schriftelijke vragen') {
+        titleSpan.textContent = 'van ' + dateValue + ' inzake ' + subj;
+      } else {
+        titleSpan.textContent = 'voor de vergadering van ' + dateValue + ' inzake ' + subj;
+      }
+    } else if (instrValue) {
+      titleSpan.textContent = instrText;
+    } else if (dateValue) {
+      if (instrText === 'Schriftelijke vragen') {
+        titleSpan.textContent = 'van ' + dateValue;
+      } else {
+        titleSpan.textContent = 'voor de vergadering van ' + dateValue;
+      }
+    } else if (subj) {
+      titleSpan.textContent = 'inzake ' + subj;
+    } else {
+      titleSpan.textContent = '';
+    }
+  }
+  instrumentSelect.addEventListener('change', updateTitle);
+  subjectInput.addEventListener('input', updateTitle);
+  dateInput.addEventListener('input', updateTitle);
+  updateTitle();
 });
 </script>
 <script>
