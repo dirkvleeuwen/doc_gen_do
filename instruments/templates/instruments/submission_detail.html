@@ -5,7 +5,19 @@
 {% block content %}
 <div class="card mb-4 shadow-sm"> {# Shadow toegevoegd #}
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Flex-wrap en gap #}
-    <h1 class="h5 mb-0">{{ preview_data.instrument }} inzake {{ preview_data.subject }}.</h1> {# h5 consistentie #}
+    <h1 class="h5 mb-0">
+      {% if preview_data.instrument == "Schriftelijke vragen" %}
+        {{ preview_data.instrument }}
+        {% with day=object.date|date:"j" month=object.date|date:"n" year=object.date|date:"Y" %}
+          van {% if month == "1" %}{{ day }} januari {{ year }}{% elif month == "2" %}{{ day }} februari {{ year }}{% elif month == "3" %}{{ day }} maart {{ year }}{% elif month == "4" %}{{ day }} april {{ year }}{% elif month == "5" %}{{ day }} mei {{ year }}{% elif month == "6" %}{{ day }} juni {{ year }}{% elif month == "7" %}{{ day }} juli {{ year }}{% elif month == "8" %}{{ day }} augustus {{ year }}{% elif month == "9" %}{{ day }} september {{ year }}{% elif month == "10" %}{{ day }} oktober {{ year }}{% elif month == "11" %}{{ day }} november {{ year }}{% elif month == "12" %}{{ day }} december {{ year }}{% endif %}
+        {% endwith %} inzake {{ preview_data.subject }}
+      {% else %}
+        {{ preview_data.instrument }}
+        {% with day=object.date|date:"j" month=object.date|date:"n" year=object.date|date:"Y" %}
+          voor de vergadering van {% if month == "1" %}{{ day }} januari {{ year }}{% elif month == "2" %}{{ day }} februari {{ year }}{% elif month == "3" %}{{ day }} maart {{ year }}{% elif month == "4" %}{{ day }} april {{ year }}{% elif month == "5" %}{{ day }} mei {{ year }}{% elif month == "6" %}{{ day }} juni {{ year }}{% elif month == "7" %}{{ day }} juli {{ year }}{% elif month == "8" %}{{ day }} augustus {{ year }}{% elif month == "9" %}{{ day }} september {{ year }}{% elif month == "10" %}{{ day }} oktober {{ year }}{% elif month == "11" %}{{ day }} november {{ year }}{% elif month == "12" %}{{ day }} december {{ year }}{% endif %}
+        {% endwith %} inzake {{ preview_data.subject }}
+      {% endif %}
+    </h1>
     <div class="d-flex flex-wrap gap-2">
         <a href="{% url 'instrument_submission_edit' object.pk %}" class="btn btn-sm btn-outline-primary" title="Bewerken">
             <i class="bi bi-pencil"></i> Bewerken
