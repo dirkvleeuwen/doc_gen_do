@@ -5,6 +5,5 @@ Toelichting:
 {% endfor %}
 {{ voorgaande_sentence }}
 
-{% if requests|length > 1 %}{% for request in requests %}- {{ request }}
-{% endfor %}{% else %}{% for request in requests %}{{ request }}
-{% endfor %}{% endif %}
+{% for request in requests %}{{ forloop.counter }}. {{ request }}
+{% endfor %}
