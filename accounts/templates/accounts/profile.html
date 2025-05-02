@@ -17,30 +17,24 @@
         <div class="card-body">
           {# Gebruik definition list voor betere structuur #}
           <dl class="row mb-4">
-            <dt class="col-sm-3">Initialen:</dt>
-            <dd class="col-sm-9">{{ user.initials|default:"-" }}</dd>
-
-            <dt class="col-sm-3">Voornaam:</dt>
-            <dd class="col-sm-9">{{ user.first_name|default:"-" }}</dd>
-
-            <dt class="col-sm-3">Achternaam:</dt>
-            <dd class="col-sm-9">{{ user.last_name|default:"-" }}</dd>
+            <dt class="col-sm-3">Naam:</dt>
+            <dd class="col-sm-9">{{ user.initials|default:"-" }} ({{ user.first_name|default:"-" }}) {{ user.last_name|default:"-" }}</dd>
 
             <dt class="col-sm-3">E-mail:</dt>
             <dd class="col-sm-9">{{ user.email }}</dd>
 
-            <dt class="col-sm-3">Partij/Organisatie:</dt>
+            <dt class="col-sm-3">Partij:</dt>
             <dd class="col-sm-9">{{ user.party|default:"-" }}</dd>
           </dl>
 
           {# Andere acties #}
-          <h2 class="h6">Acties</h2>
           <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
              {# Wachtwoord reset link #}
             <a href="{% url 'accounts:password_reset' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-key"></i> Wachtwoord opnieuw instellen
             </a>
 
+            {% if request.user.is_staff %}
             {# E-mail test knop (binnen form) #}
             <form method="post" action="{% url 'accounts:email_profile_info' %}" class="mb-0"> {# mb-0 om extra marge te voorkomen #}
               {% csrf_token %}
@@ -48,6 +42,7 @@
                   <i class="bi bi-envelope-at"></i> Stuur profielinfo
               </button>
             </form>
+            {% endif %}
             {# Einde E-mail test knop #}
           </div>
         </div>
