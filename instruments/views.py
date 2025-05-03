@@ -22,7 +22,6 @@ from instruments.models import InstrumentSubmission, Note
 from instruments.forms import InstrumentSubmissionForm, SubmitterFormSet, NoteForm
 from instruments.exports.compose_text import process_gui_data
 
-
 # Definieer de e-mail export opties die je wilt aanbieden
 EMAIL_OPTIONS = [
     {'fmt': 'pdf', 'icon': 'bi-file-earmark-pdf text-danger', 'label': '.pdf (van html)'},
@@ -99,6 +98,9 @@ class InstrumentSubmissionUpdateView(UpdateView):
             context['submitter_formset'] = SubmitterFormSet(self.request.POST, instance=self.object)
         else:
             context['submitter_formset'] = SubmitterFormSet(instance=self.object)
+        # Add notes and note form for the submission_form template
+        context['notes'] = Note.objects.filter(submission=self.object).order_by('-created_at')
+        context['note_form'] = NoteForm()
         return context
 
     def form_valid(self, form):
@@ -115,6 +117,26 @@ class InstrumentSubmissionUpdateView(UpdateView):
             return redirect("instrument_submission_detail", pk=self.object.pk)
         return self.form_invalid(form)
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        # Detecteer AJAX-aanvraag voor notitie
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' and 'text' in request.POST:
+            note_form = NoteForm(request.POST)
+            if note_form.is_valid():
+                note = note_form.save(commit=False)
+                note.submission = self.object
+                note.user = request.user
+                note.save()
+                # Render alleen de bijgewerkte lijst-notities
+                notes = Note.objects.filter(submission=self.object).order_by('-created_at')
+                html = render_to_string('instruments/partials/notes_list.html', {
+                    'notes': notes,
+                    'user': request.user
+                }, request=request)
+                return JsonResponse({'notes_html': html})
+            return JsonResponse({'errors': note_form.errors}, status=400)
+        # Valideer geen AJAX? Laat de standaard UpdateView doorlopen
+        return super().post(request, *args, **kwargs)
 
 class InstrumentSubmissionDeleteView(DeleteView):
     """

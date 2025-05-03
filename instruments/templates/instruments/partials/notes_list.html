@@ -1,0 +1,27 @@
+{# templates/instruments/partials/notes_list.html #}
+{% if notes %}
+<ul class="list-group list-group-flush">
+  {% for note in notes %}
+    <li class="list-group-item px-0">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="me-3">
+          <p class="mb-1">{{ note.text|linebreaksbr }}</p>
+          <small class="text-muted">{{ note.user }} – {{ note.created_at|date:"Y-m-d H:i" }}</small>
+        </div>
+        {% if note.user == user or user.is_staff %}
+        <div class="text-nowrap">
+          <a href="{% url 'note_edit' note.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Bewerk notitie">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <a href="{% url 'note_delete' note.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijder notitie">
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted">Nog geen notities.</p>
+{% endif %}
