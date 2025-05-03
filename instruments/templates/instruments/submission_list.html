@@ -159,9 +159,12 @@
                     </td>
                     <td>
                       {# Vereenvoudigde actieknop layout #}
-                      <div class="d-flex flex-wrap gap-1">
+                      <div class=" btn-group btn-group-sm" role="group">
                         <a href="{% url 'instrument_submission_edit' submission.pk %}" class="btn btn-sm btn-outline-secondary" title="Bewerken">
                           <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'instrument_submission_delete' submission.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
+                          <i class="bi bi-trash"></i>
                         </a>
                         {# Export Modal Knop #}
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#exportModal-{{ submission.pk }}" title="Download opties">
@@ -181,9 +184,6 @@
                           >
                             <i class="bi bi-share"></i>
                           </button>
-                         <a href="{% url 'instrument_submission_delete' submission.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
-                          <i class="bi bi-trash"></i>
-                        </a>
                       </div>
 
                       {# === BIJGEWERKTE MODALS PER RIJ === #}
