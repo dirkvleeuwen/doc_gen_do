@@ -29,9 +29,9 @@
           </small>
         </div>
         {% if note.user == user or user.is_staff %}
-        <div class="text-nowrap">
+        <div class="btn-group btn-group-sm" role="group">
           <button type="button"
-                  class="btn btn-sm btn-outline-secondary js-edit-note me-1"
+                  class="btn btn-sm btn-outline-secondary js-edit-note"
                   data-url="{% url 'note_edit' note.pk %}"
                   title="Bewerk notitie">
             <i class="bi bi-pencil"></i>

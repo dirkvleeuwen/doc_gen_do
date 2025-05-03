@@ -1,0 +1,36 @@
+
+{% load widget_tweaks %}
+
+{# Notes Partial: list and form for notes #}
+{% if object %}
+<div class="card mb-4 shadow-sm">
+  <div class="card-header d-flex align-items-center">
+    <i class="bi bi-journal-text me-2"></i>
+    <h2 class="h5 mb-0">Notities</h2>
+  </div>
+  <div id="notes-list" class="card-body px-3 py-2">
+    {% include 'instruments/partials/notes_list.html' %}
+  </div>
+  {% if user.is_authenticated %}
+    <form id="note-form" method="post" action="{% url 'instrument_submission_edit' object.pk %}" class="card-body px-3 py-2 border-top">
+      {% csrf_token %}
+      {% for field in note_form.visible_fields %}
+        <div class="form-floating mb-3">
+          {% render_field field class="form-control form-control-sm auto-resize-textarea" placeholder=field.label rows="2" %}
+          <label for="{{ field.id_for_label }}">Uw nieuwe notitie...</label>
+        </div>
+      {% endfor %}
+      {% for field in note_form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+      <button type="submit" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-plus-lg"></i> Notitie toevoegen
+      </button>
+    </form>
+  {% else %}
+    <div class="card-footer px-3 py-2 text-muted">
+      <a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> om notities toe te voegen.
+    </div>
+  {% endif %}
+</div>
+{% endif %}

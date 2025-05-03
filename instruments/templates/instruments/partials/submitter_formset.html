@@ -1,0 +1,80 @@
+
+{% load widget_tweaks %}
+
+{# Submitter Formset Partial #}
+<div class="card mb-4 px-3 py-2">
+  <h2 class="h5 mb-3">Indieners</h2>
+  {{ submitter_formset.management_form }}
+  
+  {% if submitter_formset.non_form_errors %}
+    <div class="alert alert-danger">
+      {{ submitter_formset.non_form_errors }}
+    </div>
+  {% endif %}
+  
+  <div id="submitters-container">
+    {% for s_form in submitter_formset %}
+      <div class="submitter-form-wrapper mb-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text submitter-counter-text" style="min-width: 90px;">Indiener {{ forloop.counter }}</span>
+          {% for field in s_form.hidden_fields %}{{ field }}{% endfor %}
+  
+          {# Initials Input #}
+          {% render_field s_form.initials class="form-control" placeholder="Initialen" aria-label="Initialen" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+  
+          {# Last Name Input #}
+          {% render_field s_form.lastname class="form-control flex-fill" placeholder="Achternaam" aria-label="Achternaam" style="min-width: 0;" %}
+  
+          {# Party Input #}
+          {% render_field s_form.party class="form-control" placeholder="Partij/Org" aria-label="Partij of Organisatie" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+  
+          {# DELETE Checkbox Addon #}
+          {% if s_form.DELETE %}
+            <div class="input-group-text" title="Aanvinken om deze indiener te verwijderen bij opslaan">
+                {{ s_form.DELETE|add_class:"form-check-input mt-0"|attr:"aria-label:Verwijder deze indiener"|attr:"title:Verwijder deze indiener" }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="submitter-errors ps-1">
+          {% for field in s_form.visible_fields %}{% if field.errors %}
+            <div class="text-danger small mt-1"><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</div>
+          {% endif %}{% endfor %}
+          {% if s_form.non_field_errors %}<div class="alert alert-danger alert-sm mt-1 p-1">{{ s_form.non_field_errors }}</div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="add-submitter" class="btn btn-outline-success btn-sm mb-3">
+    <i class="bi bi-plus-circle"></i> Indiener toevoegen
+  </button>
+</div>
+
+{# --- Verborgen template --- #}
+<div id="empty-form-template" style="display: none;">
+    <div class="submitter-form-wrapper mb-3">
+      {% with s_form=submitter_formset.empty_form %}
+      <div class="input-group input-group-sm">
+        <span class="input-group-text submitter-counter-text" style="min-width: 90px;">Nieuw</span>
+        {% for field in s_form.hidden_fields %}{{ field }}{% endfor %}
+
+        {# Initials Input #}
+        {% render_field s_form.initials class="form-control" placeholder="Initialen" aria-label="Initialen" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+        {# Last Name Input #}
+        {% render_field s_form.lastname class="form-control" placeholder="Achternaam" aria-label="Achternaam" %}
+
+        {# Party Input #}
+        {% render_field s_form.party class="form-control" placeholder="Partij/Org" aria-label="Partij of Organisatie" style="min-width: 6rem; max-width: 8rem; flex-grow: 0; flex-shrink: 0;" %}
+
+        {% if s_form.DELETE %}
+          <div class="input-group-text" title="Aanvinken om deze indiener te verwijderen bij opslaan">
+              {{ s_form.DELETE|add_class:"form-check-input mt-0"|attr:"aria-label:Verwijder deze indiener"|attr:"title:Verwijder deze indiener" }}
+          </div>
+        {% endif %}
+      </div>
+      <div class="submitter-errors ps-1"></div>
+      {% endwith %}
+    </div>
+</div>
+{# --- Einde verborgen template --- #}

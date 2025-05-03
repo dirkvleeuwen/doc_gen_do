@@ -1,0 +1,117 @@
+{% load widget_tweaks form_helpers static %}
+
+<div class="card mx-auto mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h1 class="h4 mb-0"><span id="form-title">
+      {% if object %}
+        {% if object.instrument.name == "Schriftelijke vragen" %}
+          {{ object.instrument }} van {{ object.date|date:"j F Y" }} inzake {{ object.subject }}
+        {% else %}
+          {{ object.instrument }} voor de vergadering van {{ object.date|date:"j F Y" }} inzake {{ object.subject }}
+        {% endif %}
+      {% else %}
+        {% with instr=form.instrument.value date=form.date.value subj=form.subject.value %}
+          {% if instr and date and subj %}
+            {% if instr == "Schriftelijke vragen" %}
+              {{ instr }} van {{ date }} inzake {{ subj }}
+            {% else %}
+              {{ instr }} voor de vergadering van {{ date }} inzake {{ subj }}
+            {% endif %}
+          {% elif instr and date %}
+            {% if instr == "Schriftelijke vragen" %}
+              {{ instr }} van {{ date }}
+            {% else %}
+              {{ instr }} voor de vergadering van {{ date }}
+            {% endif %}
+          {% elif instr and subj %}
+            {{ instr }} inzake {{ subj }}
+          {% elif date and subj %}
+            {% if instr == "Schriftelijke vragen" %}
+              van {{ date }} inzake {{ subj }}
+            {% else %}
+              voor de vergadering van {{ date }} inzake {{ subj }}
+            {% endif %}
+          {% elif instr %}
+            {{ instr }}
+          {% elif date %}
+            {% if instr == "Schriftelijke vragen" %}
+              van {{ date }}
+            {% else %}
+              voor de vergadering van {{ date }}
+            {% endif %}
+          {% elif subj %}
+            inzake {{ subj }}
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </span></h1>
+  </div>
+  <div class="card-body px-3 py-2">
+    <form method="POST">
+      <div class="btn-toolbar justify-content-between mb-3" role="toolbar">
+        <div class="btn-group" role="group" aria-label="Primary actions">
+          <button type="submit" name="submit_action" value="save_return" class="btn btn-outline-primary">
+            <i class="bi bi-save"></i> Opslaan
+          </button>
+          <button type="submit" name="submit_action" value="save_stay" class="btn btn-outline-secondary">
+            <i class="bi bi-save"></i> Opslaan en doorgaan met bewerken
+          </button>
+          <a href="{% url 'instrument_submission_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg"></i> Annuleren
+          </a>
+          {% if object %}
+            <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-outline-danger">
+              <i class="bi bi-trash"></i> Verwijder
+            </a>
+          {% endif %}
+        </div>
+        <div class="btn-group" role="group" aria-label="Secondary actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
+            <i class="bi bi-download"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
+            <i class="bi bi-envelope"></i>
+          </button>
+          <button type="button" id="shareButton" class="btn btn-sm btn-outline-success" title="Delen">
+            <i class="bi bi-share"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPreview" aria-controls="offcanvasPreview" title="Voorbeeld">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </div>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% for field in form.visible_fields %}
+        {% if field.name == 'instrument' or field.name == 'subject' or field.name == 'date' or field.name == 'considerations' or field.name == 'requests' %}
+          {% render_floating field %}
+        {% else %}
+          {% if field.field.widget.input_type == 'select' %}
+            {% render_field field class="form-select mb-3" %}
+          {% elif field.field.widget.input_type == 'checkbox' %}
+            <div class="form-check mb-3">
+              {% render_field field class="form-check-input" %}
+              <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+            </div>
+          {% else %}
+            {% render_field field class="form-control mb-3" %}
+          {% endif %}
+        {% endif %}
+        {% if field.help_text %}
+          <div class="form-text">{{ field.help_text|safe }}</div>
+        {% endif %}
+        {% if field.errors %}
+          <div class="invalid-feedback d-block">{{ field.errors|striptags }}</div>
+        {% endif %}
+      {% endfor %}
+      {% for field in form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+
+      {% include "instruments/partials/submitter_formset.html" %}
+
+    </form>
+  </div>
+</div>
