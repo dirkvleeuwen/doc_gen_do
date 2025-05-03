@@ -348,3 +348,20 @@ class NoteDeleteView(DeleteView):
         if note.user != request.user:
             return HttpResponseForbidden("Je mag alleen je eigen notities verwijderen.")
         return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        submission = self.object.submission
+        # Delete the note
+        self.object.delete()
+        # If AJAX request, return updated notes_list partial
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            notes = Note.objects.filter(submission=submission).order_by('-created_at')
+            html = render_to_string(
+                'instruments/partials/notes_list.html',
+                {'notes': notes, 'user': request.user},
+                request=request
+            )
+            return JsonResponse({'notes_html': html})
+        # Fallback: redirect back to the edit form
+        return redirect('instrument_submission_edit', pk=submission.pk)

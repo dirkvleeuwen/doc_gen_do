@@ -13,9 +13,12 @@
           <a href="{% url 'note_edit' note.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Bewerk notitie">
             <i class="bi bi-pencil"></i>
           </a>
-          <a href="{% url 'note_delete' note.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijder notitie">
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger js-delete-note"
+                  data-url="{% url 'note_delete' note.pk %}"
+                  title="Verwijder notitie">
             <i class="bi bi-trash"></i>
-          </a>
+          </button>
         </div>
         {% endif %}
       </div>

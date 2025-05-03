@@ -402,4 +402,42 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(function(cookie) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.getElementById('notes-list').addEventListener('click', function(e) {
+    const btn = e.target.closest('.js-delete-note');
+    if (!btn) return;
+    e.preventDefault();
+    if (!confirm('Weet je zeker dat je deze notitie wilt verwijderen?')) return;
+    fetch(btn.dataset.url, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrftoken
+      },
+    })
+    .then(res => res.json())
+    .then(json => {
+      if (json.notes_html) {
+        document.getElementById('notes-list').innerHTML = json.notes_html;
+      }
+    })
+    .catch(console.error);
+  });
+});
+</script>
 {% endblock %}
