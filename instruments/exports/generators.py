@@ -76,6 +76,8 @@ def generate_export_file(submission, export_type):
     
     elif export_type == "latex":
         tex_string = render_to_string("instruments/previews/template.tex", data)
+        # Strip unsupported Unicode object replacement characters that break pdflatex
+        tex_string = tex_string.replace('\uFFFC', '')
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tex_path = Path(tmpdir) / "instrument.tex"
