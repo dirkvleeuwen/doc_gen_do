@@ -331,6 +331,24 @@ class NoteUpdateView(UpdateView):
             return HttpResponseForbidden("Je mag alleen je eigen notities bewerken.")
         return super().dispatch(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        # Handle inline AJAX edit
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' and 'text' in request.POST:
+            # Update note text
+            self.object.text = request.POST['text']
+            self.object.save()
+            # Re-render notes list partial
+            notes = Note.objects.filter(submission=self.object.submission).order_by('-created_at')
+            html = render_to_string(
+                'instruments/partials/notes_list.html',
+                {'notes': notes, 'user': request.user},
+                request=request
+            )
+            return JsonResponse({'notes_html': html})
+        # Fallback to normal UpdateView handling
+        return super().post(request, *args, **kwargs)
+
 
 class NoteDeleteView(DeleteView):
     """

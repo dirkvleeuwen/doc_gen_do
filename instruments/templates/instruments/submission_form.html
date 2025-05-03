@@ -440,4 +440,81 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(function(cookie) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.getElementById('notes-list').addEventListener('click', function(e) {
+    const btn = e.target.closest('.js-edit-note');
+    if (!btn) return;
+    e.preventDefault();
+    const noteItem = btn.closest('li');
+    const textElem = noteItem.querySelector('p.mb-1');
+    const originalText = textElem.innerText;
+    // Create textarea for editing
+    const textarea = document.createElement('textarea');
+    textarea.className = 'form-control form-control-sm mb-2';
+    textarea.value = originalText;
+    textElem.replaceWith(textarea);
+
+    // Hide action buttons
+    const actionBtns = noteItem.querySelector('.text-nowrap');
+    if (actionBtns) actionBtns.style.display = 'none';
+
+    // Create Save and Cancel buttons
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'btn btn-sm btn-outline-primary me-1';
+    saveBtn.textContent = 'Opslaan';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-sm btn-outline-secondary';
+    cancelBtn.textContent = 'Annuleren';
+    const btnWrapper = document.createElement('div');
+    btnWrapper.className = 'mt-2';
+    btnWrapper.append(saveBtn, cancelBtn);
+    textarea.after(btnWrapper);
+
+    // Cancel handler
+    cancelBtn.addEventListener('click', function() {
+      btnWrapper.remove();
+      textarea.replaceWith(textElem);
+      if (actionBtns) actionBtns.style.display = '';
+    });
+
+    // Save handler
+    saveBtn.addEventListener('click', function() {
+      const data = new FormData();
+      data.append('text', textarea.value);
+      fetch(btn.dataset.url, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrftoken
+        },
+        body: data
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (json.notes_html) {
+          document.getElementById('notes-list').innerHTML = json.notes_html;
+        }
+      })
+      .catch(console.error);
+    });
+  });
+});
+</script>
 {% endblock %}
