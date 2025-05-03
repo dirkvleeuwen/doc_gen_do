@@ -185,48 +185,6 @@
       </div>
       {# --- Einde Indieners Formset --- #}
 
-      {# --- Indieners Formset --- #}
-      <div class="card mb-4 px-3 py-2">
-      <h2 class="h5 mb-3">Notities</h2>
-      {{ submitter_formset.management_form }}
-        <!-- NOTES LIST -->
-        <div id="notes-list" class="card-body px-3 py-2">
-          {% include 'instruments/partials/notes_list.html' %}
-        </div>
-        <!-- END NOTES LIST -->
-          {% if user.is_authenticated %}
-          <form id="note-form" method="post" action="{% url 'instrument_submission_edit' object.pk %}" class="mt-3">
-            {% csrf_token %}
-            {% if note_form.non_field_errors %}
-              <div class="alert alert-danger alert-sm">{{ note_form.non_field_errors }}</div>
-            {% endif %}
-            {% for field in note_form.visible_fields %}
-            <div class="mb-3">
-              {% render_field field class="form-control form-control-sm" rows="3" %}
-              {% if field.help_text %}
-              <div class="form-text form-text-sm">{{ field.help_text|safe }}</div>
-              {% endif %}
-              {% if field.errors %}
-              <div class="invalid-feedback d-block">{{ field.errors|striptags }}</div>
-              {% endif %}
-            </div>
-            {% endfor %}
-            {% for field in note_form.hidden_fields %}
-            {{ field }}
-            {% endfor %}
-            <button type="submit" class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-plus-lg"></i> Notitie toevoegen
-            </button>
-          </form>
-          {% else %}
-            <p class="text-muted mt-3">
-              <a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> om notities toe te voegen.
-            </p>
-          {% endif %}
-      </div>
-      {# --- Einde Indieners Formset --- #}
-
-
       {# --- Verborgen template --- #}
       <div id="empty-form-template" style="display: none;">
           <div class="submitter-form-wrapper mb-3">
