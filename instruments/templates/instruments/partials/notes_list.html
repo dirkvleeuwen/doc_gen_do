@@ -1,4 +1,3 @@
-{# templates/instruments/partials/notes_list.html #}
 {% if notes %}
 <ul class="list-group list-group-flush">
   {% for note in notes %}
@@ -6,7 +5,28 @@
       <div class="d-flex justify-content-between align-items-start">
         <div class="me-3">
           <p class="mb-1">{{ note.text|linebreaksbr }}</p>
-          <small class="text-muted">{{ note.user }} – {{ note.created_at|date:"Y-m-d H:i" }}</small>
+          <small class="text-muted">
+            {# Initialen via 'first' filter in plaats van slice #}
+            {{ note.user.initials }} {{ note.user.last_name }} ({{ note.user.party }})
+            -
+            {# Datum met Nederlandse maandnamen #}
+            {% with day=note.created_at|date:"j" month=note.created_at|date:"n" year=note.created_at|date:"Y" %}
+              {% if month == "1" %}{{ day }} januari {{ year }}
+              {% elif month == "2" %}{{ day }} februari {{ year }}
+              {% elif month == "3" %}{{ day }} maart {{ year }}
+              {% elif month == "4" %}{{ day }} april {{ year }}
+              {% elif month == "5" %}{{ day }} mei {{ year }}
+              {% elif month == "6" %}{{ day }} juni {{ year }}
+              {% elif month == "7" %}{{ day }} juli {{ year }}
+              {% elif month == "8" %}{{ day }} augustus {{ year }}
+              {% elif month == "9" %}{{ day }} september {{ year }}
+              {% elif month == "10" %}{{ day }} oktober {{ year }}
+              {% elif month == "11" %}{{ day }} november {{ year }}
+              {% elif month == "12" %}{{ day }} december {{ year }}
+              {% endif %}
+            {% endwith %}
+            {{ note.created_at|date:"H:i" }}
+          </small>
         </div>
         {% if note.user == user or user.is_staff %}
         <div class="text-nowrap">
