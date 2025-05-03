@@ -56,8 +56,17 @@
         {% endwith %}
       {% endif %}
     </span></h1>
-
-
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
+        <i class="bi bi-download"></i> Download
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
+        <i class="bi bi-envelope"></i> E-mail
+      </button>
+      <button type="button" id="shareButton" class="btn btn-sm btn-outline-success" title="Delen">
+        <i class="bi bi-share"></i> Delen
+      </button>
+    </div>
   </div>
   <div class="card-body">
     <form method="POST">
@@ -263,6 +272,80 @@
   </div>
 </div>
 {% endif %}
+{# ----- MODALS & SHARE SCRIPT (from submission_detail.html) ----- #}
+<!-- Download Modal -->
+<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="downloadModalLabel">Download opties</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="list-group list-group-flush">
+          {% for option in download_export_options %}
+            <a href="{% url option.url_name object.pk %}"
+               class="list-group-item list-group-item-action d-flex align-items-center">
+              <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-3" style="font-size: 1.2rem;"></i>
+              {{ option.label|default:option.url_name }}
+            </a>
+          {% empty %}
+            <p class="list-group-item text-muted">Geen download opties beschikbaar.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel">E-mail opties</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-grid gap-2">
+          {% for option in email_export_options %}
+            <form method="post" action="{% url 'instrument_email_export' object.pk %}" class="d-grid">
+              {% csrf_token %}
+              <input type="hidden" name="format" value="{{ option.fmt }}">
+              <button type="submit" class="btn btn-sm btn-outline-secondary text-start">
+                <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-2"></i>
+                {{ option.label|default:option.fmt }} via e-mail
+              </button>
+            </form>
+          {% empty %}
+            <p class="text-muted">Geen e-mail opties beschikbaar.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Button Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var shareBtn = document.getElementById('shareButton');
+  if (navigator.share) {
+    // Deel de preview-tekst, niet de URL
+    var shareText = `{{ preview|escapejs }}`;
+    shareBtn.addEventListener('click', function() {
+      navigator.share({
+        title: "{{ object.subject|default:form.subject.value }}",
+        text: shareText
+      }).catch(function(error) {
+        console.error('Error sharing:', error);
+      });
+    });
+  } else {
+    shareBtn.style.display = 'none';
+  }
+});
+</script>
 {% endblock %}
 
 {% block scripts %}

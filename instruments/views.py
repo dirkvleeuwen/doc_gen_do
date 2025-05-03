@@ -58,6 +58,11 @@ class InstrumentSubmissionCreateView(CreateView):
             context['submitter_formset'] = SubmitterFormSet(self.request.POST, instance=self.object)
         else:
             context['submitter_formset'] = SubmitterFormSet(instance=self.object)
+        # Voeg export- en e-mail opties toe voor download/email modals
+        context['download_export_options'] = DOWNLOAD_OPTIONS
+        context['email_export_options'] = EMAIL_OPTIONS
+        # Voeg preview toe voor share-button (leegt preview bij nieuw object)
+        context['preview'] = ''
         return context
 
     def form_valid(self, form):
@@ -101,6 +106,21 @@ class InstrumentSubmissionUpdateView(UpdateView):
         # Add notes and note form for the submission_form template
         context['notes'] = Note.objects.filter(submission=self.object).order_by('-created_at')
         context['note_form'] = NoteForm()
+        # Voeg export- en e-mail opties toe voor download/email modals
+        context['download_export_options'] = DOWNLOAD_OPTIONS
+        context['email_export_options'] = EMAIL_OPTIONS
+        # Voeg preview toe voor share-button (zelfde als detailview)
+        submission = self.object
+        table_data = [[s.initials, s.lastname, s.party] for s in submission.submitters.all()]
+        preview_data = process_gui_data(
+            table_data=table_data,
+            instrument=submission.instrument,
+            subject=submission.subject,
+            date_str=str(submission.date),
+            considerations=submission.considerations,
+            requests=submission.requests
+        )
+        context['preview'] = render_to_string("instruments/previews/template.txt", preview_data)
         return context
 
     def form_valid(self, form):
