@@ -22,19 +22,6 @@
         <a href="{% url 'instrument_submission_edit' object.pk %}" class="btn btn-sm btn-outline-primary" title="Bewerken">
             <i class="bi bi-pencil"></i> Bewerken
         </a>
-        <a href="{% url 'instrument_submission_delete' object.pk %}" class="btn btn-sm btn-outline-danger" title="Verwijderen">
-            <i class="bi bi-trash"></i> Verwijderen
-        </a>
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
-            <i class="bi bi-download"></i> Download
-        </button>
-        {# Let op de modal target ID hier #}
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
-            <i class="bi bi-envelope"></i> E-mail
-        </button>
-        <button type="button" id="shareButton" class="btn btn-sm btn-outline-success" title="Delen">
-            <i class="bi bi-share"></i> Delen
-        </button>
     </div>
 </div>
     <div class="card-body">
@@ -52,91 +39,5 @@
 
     </div>
 </div>
-
-{# === BIJGEWERKTE DYNAMISCHE MODALS === #}
-
-<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="downloadModalLabel">
-              <i class="bi bi-download me-2"></i>Download Opties
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
-        </div>
-        <div class="modal-body">
-          <div class="list-group list-group-flush">
-            {# Loop over opties uit de view #}
-            {% for option in download_export_options %}
-              <a href="{% url option.url_name object.pk %}" class="list-group-item list-group-item-action d-flex align-items-center">
-                <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-3" style="font-size: 1.2rem;"></i>
-                {{ option.label|default:option.url_name }}
-              </a>
-            {% empty %}
-              <p class="list-group-item text-muted">Geen download opties beschikbaar.</p>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
-              <i class="bi bi-x-lg"></i> Sluiten
-          </button>
-        </div>
-      </div>
-    </div>
-</div>
-
-{# Let op: ID is nu generiek 'emailModal', niet meer met object.pk omdat die in de loop zit #}
-{# Zorg dat de knop die deze opent ook data-bs-target="#emailModal" gebruikt #}
-<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="emailModalLabel">
-              <i class="bi bi-envelope me-2"></i>E-mail Export: {{ object.subject|truncatechars:30 }}
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
-        </div>
-        <div class="modal-body d-grid gap-2">
-           {# Loop over opties uit de view #}
-           {% for option in email_export_options %}
-            <form method="post" action="{% url 'instrument_email_export' object.pk %}" class="d-grid">
-              {% csrf_token %}
-              <input type="hidden" name="format" value="{{ option.fmt }}">
-              <button type="submit" class="btn btn-sm btn-outline-secondary text-start">
-                <i class="bi {{ option.icon|default:'bi-file-earmark' }} me-2"></i> {{ option.label|default:option.fmt }} via e-mail
-              </button>
-            </form>
-            {% empty %}
-              <p class="text-muted">Geen e-mail opties beschikbaar.</p>
-            {% endfor %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
-              <i class="bi bi-x-lg"></i> Sluiten
-          </button>
-        </div>
-      </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var shareBtn = document.getElementById('shareButton');
-    if (navigator.share) {
-        var shareText = `{{ preview|escapejs }}`;
-        shareBtn.addEventListener('click', function() {
-            navigator.share({
-                title: "{{ object.subject }}",
-                text: shareText
-            }).catch(function(error) {
-                console.error('Error sharing:', error);
-            });
-        });
-    } else {
-        shareBtn.style.display = 'none';
-    }
-});
-</script>
 
 {% endblock %}
