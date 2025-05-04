@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     shared-mime-info \
     texlive-latex-base \
-    texlive-latex-recommended \
+    texlive-fonts-recommended \
     texlive-latex-extra \
-    fonts-lato \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
+    texlive-fonts-extra \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
