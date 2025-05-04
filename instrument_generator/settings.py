@@ -194,3 +194,6 @@ if DEBUG:
 
     # Use console email backend to avoid SMTP requirement
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    ADMINS = [
+        ("Site Admin", "admin@doc-gen.eu"),
+    ]
