@@ -32,17 +32,37 @@ CSRF_TRUSTED_ORIGINS = [
 # ------------------------------------------------------------------------------
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["DB_NAME"],
-        "USER": os.environ["DB_USER"],
-        "PASSWORD": os.environ["DB_PASSWORD"],
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-        "OPTIONS": {"sslmode": "require"},
+# Met de env‑variabele USE_SQLITE kun je lokaal wisselen tussen SQLite en
+# dezelfde PostgreSQL‑database als in productie.
+# Wisselen door de env‑variabele `USE_SQLITE` in te stellen op `1` of `true`.
+# Altijd in de terminal uitvoeren waarin ook de Django‑server draait.
+# Dit is handig voor lokale ontwikkeling zonder dat je een PostgreSQL‑database
+# hoeft te draaien.
+# Uitzetten met `USE_SQLITE=0` of `false`.
+SQLITE_SWITCH = os.getenv("USE_SQLITE", "false").lower() in ("1", "true", "yes")
+
+if DEBUG and SQLITE_SWITCH:
+    # Gebruik een eenvoudige SQLite‑database wanneer DEBUG=True en
+    # USE_SQLITE geactiveerd is (bijv. `export USE_SQLITE=1`)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    # Val terug op PostgreSQL (productie of development)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["DB_NAME"],
+            "USER": os.environ["DB_USER"],
+            "PASSWORD": os.environ["DB_PASSWORD"],
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+            "OPTIONS": {"sslmode": "require"},
+        }
+    }
 
 # ------------------------------------------------------------------------------
 # APPLICATIONS & MIDDLEWARE
@@ -154,6 +174,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'instrument_generator.context_processors.sqlite_mode',
             ],
         },
     },

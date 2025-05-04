@@ -13,6 +13,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
       <div class="container">
         <a class="navbar-brand" href="#">Instrument Generator</a>
+        {% if sqlite_mode %}
+          <span class="navbar-text bg-danger text-light fw-bold px-3 py-2 ms-lg-3 rounded">
+            WAARSCHUWING&nbsp;•&nbsp;SQLite‑modus
+          </span>
+        {% endif %}
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
                 aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
