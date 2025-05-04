@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load url_replace from url_replace %}
+{% load i18n %}
 {% block title %}Overzicht Indieningen{% endblock %}
 
 {% block content %}
@@ -109,14 +110,8 @@
                   {% with sort=request.GET.sort %}
                   <th>
                     <a href="?{% url_replace request 'sort' 'subject' %}" class="text-decoration-none text-dark fw-semibold"> {# fw-semibold toegevoegd #}
-                      Onderwerp
+                      Instrument en onderwerp
                       {% if sort == 'subject' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'subject_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
-                    </a>
-                  </th>
-                  <th>
-                     <a href="?{% url_replace request 'sort' 'instrument' %}" class="text-decoration-none text-dark fw-semibold">
-                      Instrument
-                      {% if sort == 'instrument' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'instrument_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
                     </a>
                   </th>
                   <th>
@@ -140,13 +135,13 @@
                 {% for submission in submissions %}
                   <tr>
                     <td>
-                      <a href="{% url 'instrument_submission_detail' submission.pk %}" class="text-decoration-none">
-                        {{ submission.subject }}
+                      <a href="{% url 'instrument_submission_edit' submission.pk %}" class="text-decoration-none">
+                        {{ submission.instrument }} inzake {{ submission.subject }}.
                       </a>
                     </td>
-                    <td>{{ submission.instrument }}</td>
-                    <td>{{ submission.date }}</td>
-                    <td>{{ submission.updated_at|date:"d-m-Y H:i" }}</td> {# Datum format aangepast #}
+                    
+                    <td>{% language 'nl' %}{{ submission.date|date:"j F Y" }}{% endlanguage %}</td>
+                    <td>{% language 'nl' %}{{ submission.updated_at|date:"j F Y H:i" }}{% endlanguage %}</td>
                     <td>
                       {% with submitters=submission.submitters.all %}
                       <span class="badge text-bg-secondary rounded-pill">{{ submitters|length }}</span> {# rounded-pill #}
