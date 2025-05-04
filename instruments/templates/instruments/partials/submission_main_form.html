@@ -48,7 +48,7 @@
   </div>
   <div class="card-body px-3 py-2">
     <form method="POST">
-      <div class="btn-toolbar justify-content-between mb-3" role="toolbar">
+      <div class="btn-toolbar justify-content-between mb-3 d-none d-md-flex" role="toolbar">
         <div class="btn-group" role="group" aria-label="Primary actions">
           <button type="submit" name="submit_action" value="save_return" class="btn btn-outline-primary">
             <i class="bi bi-save"></i> Opslaan
@@ -77,6 +77,61 @@
             <i class="bi bi-share"></i>
           </button>
           <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPreview" aria-controls="offcanvasPreview" title="Voorbeeld">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+      {# --- Mobiele knoppen (< 768px) --- #}
+      <div class="d-md-none mb-3">
+
+        {# Primaire acties verticaal gestapeld #}
+        <div class="d-grid gap-2">
+          <button type="submit" name="submit_action" value="save_return"
+                  class="btn btn-outline-primary w-100">
+            <i class="bi bi-save"></i> Opslaan en terug
+          </button>
+
+          <button type="submit" name="submit_action" value="save_stay"
+                  class="btn btn-outline-secondary w-100">
+            <i class="bi bi-save"></i> Opslaan
+          </button>
+
+          <a href="{% url 'instrument_submission_list' %}"
+             class="btn btn-outline-secondary w-100">
+            <i class="bi bi-x-lg"></i> Terug naar lijst
+          </a>
+
+          {% if object %}
+            <a href="{% url 'instrument_submission_delete' object.pk %}"
+               class="btn btn-outline-danger w-100">
+              <i class="bi bi-trash"></i> Verwijderen
+            </a>
+          {% endif %}
+        </div>
+
+        {% if object %}
+        {# Secundaire acties zoals desktop, maar onder elkaar #}
+        <div class="btn-group mt-2" role="group" aria-label="Secondary actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary"
+                  data-bs-toggle="modal" data-bs-target="#downloadModal"
+                  title="Download opties">
+            <i class="bi bi-download"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary"
+                  data-bs-toggle="modal" data-bs-target="#emailModal"
+                  title="E-mail opties">
+            <i class="bi bi-envelope"></i>
+          </button>
+          <button type="button" id="shareButtonMobile"
+                  class="btn btn-sm btn-outline-success"
+                  title="Delen">
+            <i class="bi bi-share"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary"
+                  data-bs-toggle="offcanvas" data-bs-target="#offcanvasPreview"
+                  aria-controls="offcanvasPreview" title="Voorbeeld">
             <i class="bi bi-eye"></i>
           </button>
         </div>
