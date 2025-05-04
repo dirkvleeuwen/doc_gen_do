@@ -140,7 +140,26 @@
                       </a>
                     </td>
                     
-                    <td>{% language 'nl' %}{{ submission.date|date:"j F Y" }}{% endlanguage %}</td>
+                    <td>
+                      {% language 'nl' %}
+                        {% if submission.instrument == "Mondelinge vragen" or submission.instrument == "Motie" or submission.instrument == "Agendapunt" or submission.instrument == "Actualiteit" %}
+                          <span class="badge text-bg-secondary position-relative">{{ submission.date|date:"j F Y" }}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
+                              v
+                              <span class="visually-hidden">soort datum</span>
+                            </span>
+                          </span>
+                        {% elif submission.instrument == "Schriftelijke vragen" %}
+                          <span class="badge text-bg-secondary position-relative">{{ submission.date|date:"j F Y" }}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
+                              i
+                              <span class="visually-hidden">soort datum</span>
+                            </span>
+                          </span>
+                        {% endif %} 
+                        </span>
+                      {% endlanguage %}
+                    </td>
                     <td>{% language 'nl' %}{{ submission.updated_at|date:"j F Y H:i" }}{% endlanguage %}</td>
                     <td>
                       {% with submitters=submission.submitters.all %}
@@ -481,5 +500,4 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
-
 {% endblock %}
