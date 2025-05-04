@@ -14,6 +14,7 @@
 </div>
 
 {# Download Modal #}
+{% if object.pk %}
 <div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -37,8 +38,10 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 {# Email Modal #}
+{% if object.pk %}
 <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -65,3 +68,4 @@
     </div>
   </div>
 </div>
+{% endif %}

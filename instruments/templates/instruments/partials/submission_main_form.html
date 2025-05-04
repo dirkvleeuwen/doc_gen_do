@@ -65,6 +65,7 @@
             </a>
           {% endif %}
         </div>
+        {% if object %}
         <div class="btn-group" role="group" aria-label="Secondary actions">
           <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
             <i class="bi bi-download"></i>
@@ -79,6 +80,7 @@
             <i class="bi bi-eye"></i>
           </button>
         </div>
+        {% endif %}
       </div>
       {% csrf_token %}
       {% if form.non_field_errors %}
@@ -114,4 +116,4 @@
 
     </form>
   </div>
-</div>
+        </div>
