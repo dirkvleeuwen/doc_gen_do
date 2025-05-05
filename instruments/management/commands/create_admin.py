@@ -13,7 +13,7 @@ Environment variables that will be used if no options are passed:
 Gebruik dit commando om een superuser aan te maken met de volgende command line:
 python manage.py create_admin \
     --email admin@doc-gen.eu \
-    --password 'ZjonG4J2!' \
+    --password 'sterkwachtwoord' \
     --initials 'D.J.' \
     --last-name 'van Leeuwen' \
     --party 'Admin Party'
