@@ -31,17 +31,19 @@ def notify_user_upon_activation(sender, instance, created, **kwargs):
             context={"user": instance},
             user=instance,
         )
-        if settings.ADMINS:
-            send_html_email(
-                subject=f"Account geactiveerd: {instance.initials}",
-                to=settings.ADMINS[0][1],
-                template_name="emails/notify_admin_activated.html",
-                text_template_name="emails/notify_admin_activated.txt",
-                context={"user": instance},
-            )
+        super_emails = list(CustomUser.objects.filter(is_superuser=True).values_list('email', flat=True))
+        if super_emails:
+            for email in super_emails:
+                send_html_email(
+                    subject=f"Account geactiveerd: {instance.initials}",
+                    to=email,
+                    template_name="emails/notify_admin_activated.html",
+                    text_template_name="emails/notify_admin_activated.txt",
+                    context={"user": instance},
+                )
         else:
             logger.warning(
-                "Geen ADMINS ingesteld; admin-notificatie geactiveerd account %r overgeslagen",
+                "Geen superusers gevonden; admin-notificatie geactiveerd account %r overgeslagen",
                 instance.pk,
             )
         _user_was_inactive.pop(instance.pk, None)
@@ -70,16 +72,18 @@ def notify_user_upon_approval(sender, instance, **kwargs):
             context={"user": instance},
             user=instance,
         )
-        if settings.ADMINS:
-            send_html_email(
-                subject=f"Account goedgekeurd: {instance.initials}",
-                to=settings.ADMINS[0][1],
-                template_name="emails/notify_admin_approved.html",
-                text_template_name="emails/notify_admin_approved.txt",
-                context={"user": instance},
-            )
+        super_emails = list(CustomUser.objects.filter(is_superuser=True).values_list('email', flat=True))
+        if super_emails:
+            for email in super_emails:
+                send_html_email(
+                    subject=f"Account goedgekeurd: {instance.initials}",
+                    to=email,
+                    template_name="emails/notify_admin_approved.html",
+                    text_template_name="emails/notify_admin_approved.txt",
+                    context={"user": instance},
+                )
         else:
             logger.warning(
-                "Geen ADMINS ingesteld; admin-notificatie goedgekeurd account %r overgeslagen",
+                "Geen superusers gevonden; admin-notificatie goedgekeurd account %r overgeslagen",
                 instance.pk,
             )
