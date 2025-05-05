@@ -1,6 +1,9 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.template.loader import render_to_string
+import logging
+logger = logging.getLogger(__name__)
 from mailer.utils import send_html_email
 from accounts.models import CustomUser
 
@@ -28,13 +31,19 @@ def notify_user_upon_activation(sender, instance, created, **kwargs):
             context={"user": instance},
             user=instance,
         )
-        send_html_email(
-            subject=f"Account geactiveerd: {instance.initials}",
-            to=settings.ADMINS[0][1],
-            template_name="emails/notify_admin_activated.html",
-            text_template_name="emails/notify_admin_activated.txt",
-            context={"user": instance},
-        )
+        if settings.ADMINS:
+            send_html_email(
+                subject=f"Account geactiveerd: {instance.initials}",
+                to=settings.ADMINS[0][1],
+                template_name="emails/notify_admin_activated.html",
+                text_template_name="emails/notify_admin_activated.txt",
+                context={"user": instance},
+            )
+        else:
+            logger.warning(
+                "Geen ADMINS ingesteld; admin-notificatie geactiveerd account %r overgeslagen",
+                instance.pk,
+            )
         _user_was_inactive.pop(instance.pk, None)
 
 
@@ -61,10 +70,16 @@ def notify_user_upon_approval(sender, instance, **kwargs):
             context={"user": instance},
             user=instance,
         )
-        send_html_email(
-            subject=f"Account goedgekeurd: {instance.initials}",
-            to=settings.ADMINS[0][1],
-            template_name="emails/notify_admin_approved.html",
-            text_template_name="emails/notify_admin_approved.txt",
-            context={"user": instance},
-        )
+        if settings.ADMINS:
+            send_html_email(
+                subject=f"Account goedgekeurd: {instance.initials}",
+                to=settings.ADMINS[0][1],
+                template_name="emails/notify_admin_approved.html",
+                text_template_name="emails/notify_admin_approved.txt",
+                context={"user": instance},
+            )
+        else:
+            logger.warning(
+                "Geen ADMINS ingesteld; admin-notificatie goedgekeurd account %r overgeslagen",
+                instance.pk,
+            )
