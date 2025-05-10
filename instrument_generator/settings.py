@@ -30,6 +30,13 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ------------------------------------------------------------------------------
+# FEATURE FLAGS
+# ------------------------------------------------------------------------------
+# Met de env-variabele ENABLE_APPROVALS kun je de approvals app aan- of uitzetten
+# Uitzetten met `ENABLE_APPROVALS=0` of `false`, aanzetten met `ENABLE_APPROVALS=1` of `true`
+ENABLE_APPROVALS = os.environ.get("ENABLE_APPROVALS", "true").lower() in ("1", "true", "yes")
+
+# ------------------------------------------------------------------------------
 # DATABASES
 # ------------------------------------------------------------------------------
 # Met de env‑variabele USE_SQLITE kun je lokaal wisselen tussen SQLite en
@@ -67,6 +74,7 @@ else:
 # ------------------------------------------------------------------------------
 # APPLICATIONS & MIDDLEWARE
 # ------------------------------------------------------------------------------
+# Basisapplicaties die altijd geladen worden
 INSTALLED_APPS = [
     # Django core
     "django.contrib.admin",
@@ -83,6 +91,10 @@ INSTALLED_APPS = [
     # Third‑party
     "storages",
 ]
+
+# Voeg approvals app alleen toe als deze is ingeschakeld
+if ENABLE_APPROVALS:
+    INSTALLED_APPS.append("approvals.apps.ApprovalsConfig")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -175,6 +187,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'instrument_generator.context_processors.sqlite_mode',
+                'instrument_generator.context_processors.approvals_enabled',
             ],
         },
     },

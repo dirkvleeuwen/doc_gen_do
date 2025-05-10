@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from django.contrib.auth import views as auth_views
 from instrument_generator.health import health
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("health/", health, name="health"),
@@ -26,7 +28,11 @@ urlpatterns = [
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path("instruments/", include("instruments.urls")),
     path("", lambda request: redirect("instruments/submissions/", permanent=False)),  # Redirect voor root
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Alleen approvals URLs toevoegen als deze feature is ingeschakeld
+if settings.ENABLE_APPROVALS:
+    urlpatterns.insert(-1, path("approvals/", include("approvals.urls")))
 
 
 

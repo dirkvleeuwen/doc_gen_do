@@ -81,3 +81,54 @@ class Note(models.Model):
 
     def __str__(self):
         return f"Notitie door {self.user} op {self.created_at.date()}"
+
+
+class InstrumentVersion(models.Model):
+    """
+    Model voor het opslaan van een versie van een instrument submission op het moment van goedkeuringsaanvraag.
+    Dit zorgt ervoor dat we altijd kunnen zien welke versie van het instrument is beoordeeld.
+    """
+    submission = models.ForeignKey(
+        InstrumentSubmission,
+        on_delete=models.CASCADE,
+        related_name="versions"
+    )
+    instrument = models.CharField(max_length=50)
+    subject = models.CharField(max_length=200)
+    date = models.DateField()
+    considerations = models.TextField(blank=True)
+    requests = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # JSON field voor het opslaan van de indieners op het moment van versioning
+    submitters_data = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Versie van {self.instrument} - {self.subject} ({self.created_at})"
+
+    @classmethod
+    def create_from_submission(cls, submission):
+        """
+        Maak een nieuwe versie op basis van een InstrumentSubmission
+        """
+        submitters_data = [
+            {
+                'initials': s.initials,
+                'lastname': s.lastname,
+                'party': s.party
+            }
+            for s in submission.submitters.all()
+        ]
+
+        return cls.objects.create(
+            submission=submission,
+            instrument=submission.instrument,
+            subject=submission.subject,
+            date=submission.date,
+            considerations=submission.considerations,
+            requests=submission.requests,
+            submitters_data=submitters_data
+        )

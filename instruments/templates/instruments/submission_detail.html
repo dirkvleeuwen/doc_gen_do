@@ -1,27 +1,52 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
 {% block title %}Details indiening: {{ object.subject|truncatechars:30 }}{% endblock %} {# Titel dynamisch gemaakt #}
 
 {% block content %}
 <div class="card mb-4 shadow-sm"> {# Shadow toegevoegd #}
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Flex-wrap en gap #}
-    <h1 class="h5 mb-0">
-      {% if preview_data.instrument == "Schriftelijke vragen" %}
-        {{ preview_data.instrument }}
-        {% with day=object.date|date:"j" month=object.date|date:"n" year=object.date|date:"Y" %}
-          van {% if month == "1" %}{{ day }} januari {{ year }}{% elif month == "2" %}{{ day }} februari {{ year }}{% elif month == "3" %}{{ day }} maart {{ year }}{% elif month == "4" %}{{ day }} april {{ year }}{% elif month == "5" %}{{ day }} mei {{ year }}{% elif month == "6" %}{{ day }} juni {{ year }}{% elif month == "7" %}{{ day }} juli {{ year }}{% elif month == "8" %}{{ day }} augustus {{ year }}{% elif month == "9" %}{{ day }} september {{ year }}{% elif month == "10" %}{{ day }} oktober {{ year }}{% elif month == "11" %}{{ day }} november {{ year }}{% elif month == "12" %}{{ day }} december {{ year }}{% endif %}
-        {% endwith %} inzake {{ preview_data.subject }}
-      {% else %}
-        {{ preview_data.instrument }}
-        {% with day=object.date|date:"j" month=object.date|date:"n" year=object.date|date:"Y" %}
-          voor de vergadering van {% if month == "1" %}{{ day }} januari {{ year }}{% elif month == "2" %}{{ day }} februari {{ year }}{% elif month == "3" %}{{ day }} maart {{ year }}{% elif month == "4" %}{{ day }} april {{ year }}{% elif month == "5" %}{{ day }} mei {{ year }}{% elif month == "6" %}{{ day }} juni {{ year }}{% elif month == "7" %}{{ day }} juli {{ year }}{% elif month == "8" %}{{ day }} augustus {{ year }}{% elif month == "9" %}{{ day }} september {{ year }}{% elif month == "10" %}{{ day }} oktober {{ year }}{% elif month == "11" %}{{ day }} november {{ year }}{% elif month == "12" %}{{ day }} december {{ year }}{% endif %}
-        {% endwith %} inzake {{ preview_data.subject }}
-      {% endif %}
-    </h1>
+    <h1 class="h5 mb-0">{{ object.instrument }} - {{ object.subject }}</h1>
     <div class="d-flex flex-wrap gap-2">
         <a href="{% url 'instrument_submission_edit' object.pk %}" class="btn btn-sm btn-outline-primary" title="Bewerken">
             <i class="bi bi-pencil"></i> Bewerken
         </a>
+        {% if approvals_enabled and object.approval_requests.exists %}
+            {% with latest_request=object.approval_requests.latest %}
+                {% if latest_request.status == 'PENDING' %}
+                    <a href="{% url 'approvals:create_request' object.pk %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-check-circle-fill"></i> Goedkeuring in behandeling
+                    </a>
+                {% elif latest_request.status == 'REJECTED' %}
+                    <a href="{% url 'approvals:create_request' object.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Goedkeuring afgewezen - Nieuwe aanvraag
+                    </a>
+                {% else %}
+                    <span class="btn btn-sm btn-success disabled">
+                        <i class="bi bi-check2-all"></i> Goedgekeurd
+                    </span>
+                {% endif %}
+            {% endwith %}
+        {% elif approvals_enabled %}
+            <a href="{% url 'approvals:create_request' object.pk %}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-check-circle"></i> Goedkeuring aanvragen
+            </a>
+        {% endif %}
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#downloadModal" title="Download opties">
+                <i class="bi bi-download"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailModal" title="E-mail opties">
+                <i class="bi bi-envelope"></i>
+            </button>
+            <button type="button" id="shareButton" class="btn btn-sm btn-outline-success" title="Delen">
+                <i class="bi bi-share"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPreview" aria-controls="offcanvasPreview" title="Voorbeeld">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
     </div>
 </div>
     <div class="card-body">
@@ -37,7 +62,59 @@
 
         <pre class="bg-light p-3 border rounded mb-4" style="white-space: pre-wrap; font-size: 0.85rem;">{{ preview }}</pre> {# font-size kleiner #}
 
+        {% if approvals_enabled and object.approval_requests.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h6 mb-0">Goedkeuringsgeschiedenis</h2>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for request in object.approval_requests.all|dictsortreversed:"created_at" %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">Status: 
+                                <span class="badge {% if request.status == 'PENDING' %}bg-warning
+                                      {% elif request.status == 'APPROVED' %}bg-success
+                                      {% else %}bg-danger{% endif %}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </h6>
+                            <p class="mb-1">Aangevraagd door: {{ request.requester.get_full_name|default:request.requester.email }}</p>
+                            {% if request.request_comment %}
+                            <p class="mb-1"><strong>Toelichting van aanvrager:</strong></p>
+                            <p class="mb-1 text-muted">{{ request.request_comment|linebreaks }}</p>
+                            {% endif %}
+                            
+                            {% if request.reviewer %}
+                            <p class="mb-1">Beoordeeld door: {{ request.reviewer.get_full_name|default:request.reviewer.email }}</p>
+                            {% if request.review_comment %}
+                            <p class="mb-1"><strong>Opmerkingen van beoordelaar:</strong></p>
+                            <p class="mb-0 text-muted">{{ request.review_comment|linebreaks }}</p>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ request.created_at|date:"j F Y H:i" }}</small>
+                    </div>
+                    {% if request.status == 'PENDING' %}
+                    <div class="mt-2">
+                        <a href="{% url 'approvals:request_detail' request.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Details bekijken
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
+{% include "instruments/partials/submission_overlays.html" %}
+{% include "instruments/partials/submission_notes.html" %}
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'instruments/js/submission_form.js' %}"></script>
 {% endblock %}

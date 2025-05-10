@@ -1,0 +1,264 @@
+{% extends 'approvals/base.html' %}
+
+{% load widget_tweaks %}
+
+{% block title %}Goedkeuringen Dashboard{% endblock %}
+
+{% block approval_content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h1 class="h5 mb-0">Goedkeuringen Dashboard</h1>
+  </div>
+  <div class="card-body">
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link {% if current_tab == 'pending' %}active{% endif %}" href="?tab=pending">
+          Wachtend
+          {% if pending_count %}<span class="badge bg-warning ms-2">{{ pending_count }}</span>{% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if current_tab == 'reviewed' %}active{% endif %}" href="?tab=reviewed">
+          Beoordeeld
+        </a>
+      </li>
+    </ul>
+
+    {% if requests %}
+      <div class="row g-4">
+        {% if current_tab == 'pending' %}
+          {% for request in requests %}
+            <div class="col-12">
+              <div class="card approval-card h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <h5 class="card-title mb-0">
+                          {{ request.submission.instrument }} - {{ request.submission.subject|truncatechars:50 }}
+                        </h5>
+                        {% if request.has_previous_rejections %}
+                          <span class="badge bg-secondary">Hernieuwd verzoek</span>
+                        {% else %}
+                          <span class="badge bg-info">Nieuw verzoek</span>
+                        {% endif %}
+                      </div>
+                      <p class="approval-meta mb-0">
+                        Aangevraagd door: {{ request.requester.get_full_name|default:request.requester.email }}
+                        <span class="mx-2">•</span>
+                        {{ request.created_at|date:"j F Y H:i" }}
+                      </p>
+                    </div>
+                    <span class="badge bg-warning status-badge">
+                      {{ request.get_status_display }}
+                    </span>
+                  </div>
+
+                  {% if request.request_comment %}
+                    <div class="approval-comments">
+                      {{ request.request_comment|linebreaks }}
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Groep-goedkeuringen status -->
+                  <div class="mb-3">
+                    <!-- Voortgangsbalk voor goedkeuringen -->
+                    <div class="mb-2">
+                      <small class="text-muted">Goedkeuringsstatus:</small>
+                      
+                      <div class="progress mt-1" style="height: 8px; background-color: #e9ecef;">
+                        <!-- Toon voortgang op basis van individuele ledenstemmen -->
+                        {% for ga in request.group_approvals.all %}
+                          {% if request.requester in ga.group.members.all %}
+                            {% with eligible_count=ga.group.members.count|add:"-1" %}
+                              <!-- Als de aanvrager lid is van de groep, tel deze niet mee -->
+                              <div class="progress-bar" role="progressbar" 
+                                   style="width: {% widthratio ga.approved_members.count eligible_count 100 %}%; background-color: #28a745;">
+                              </div>
+                            {% endwith %}
+                          {% else %}
+                            <!-- Als de aanvrager geen lid is, tel alle leden mee -->
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {% widthratio ga.approved_members.count ga.group.members.count 100 %}%; background-color: #28a745;">
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% if request.user_pending_groups %}
+                    <div>
+                      <small class="text-muted me-2">Je kunt goedkeuren namens:</small>
+                      {% for group_name in request.user_pending_groups %}
+                        <span class="badge bg-info">{{ group_name }}</span>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Toon de status van groepsgoedkeuringen -->
+                    <div class="mt-2">
+                      <small class="text-muted">Status groepsgoedkeuringen:</small>
+                      <ul class="list-unstyled ms-2 small">
+                        {% for group_approval in request.group_approvals.all %}
+                          <li>
+                            {{ group_approval.group.name }}: 
+                            {% if request.requester in group_approval.group.members.all %}
+                              {% with eligible_count=group_approval.group.members.count|add:"-1" %}
+                                <span class="fw-bold">{{ group_approval.approved_members.count }}/{{ eligible_count }}</span> stemgerechtigde leden
+                              {% endwith %}
+                            {% else %}
+                              <span class="fw-bold">{{ group_approval.approved_members.count }}/{{ group_approval.group.members.count }}</span> leden
+                            {% endif %}
+                            {% if group_approval.status == 'APPROVED' %}
+                              <span class="badge bg-success">Volledig</span>
+                            {% elif group_approval.status == 'REJECTED' %}
+                              <span class="badge bg-danger">Afgewezen</span>
+                            {% else %}
+                              <span class="badge bg-warning">In afwachting</span>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <a href="{% url 'approvals:request_detail' request.pk %}" class="btn btn-sm btn-primary">
+                      <i class="bi bi-eye"></i> Details bekijken
+                    </a>
+                    
+                    {% if request.status == 'PENDING' and request.requester == user %}
+                      <div class="ms-2 d-inline-block">
+                        <span class="text-muted"><i class="bi bi-info-circle"></i> Je kunt niet je eigen verzoek beoordelen</span>
+                      </div>
+                    {% elif request.status == 'PENDING' and not request.user_pending_groups %}
+                      <div class="ms-2 d-inline-block">
+                        <span class="text-muted"><i class="bi bi-info-circle"></i> Je hebt geen bevoegdheid om dit verzoek te beoordelen</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          {# Beoordeelde aanvragen, gegroepeerd per submission #}
+          {% for group in requests %}
+            <div class="col-12">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h6 class="mb-0">{{ group.submission.instrument }} - {{ group.submission.subject }}</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                  {% for request in group.requests %}
+                    <div class="list-group-item">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge {% if request.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %}">
+                              {{ request.get_status_display }}
+                            </span>
+                            <!-- Toon info over welke groepen hebben goedgekeurd/afgekeurd -->
+                            {% if request.group_approvals.exists %}
+                              <span class="ms-1">
+                                door 
+                                {% for group_approval in request.group_approvals.all %}
+                                  {% if group_approval.status != 'PENDING' %}
+                                    <span class="badge {% if group_approval.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %}">
+                                      {{ group_approval.group.name }}
+                                    </span>
+                                  {% endif %}
+                                {% endfor %}
+                              </span>
+                            {% else %}
+                              <span class="text-muted">
+                                Beoordeeld door: {{ request.reviewer.get_full_name|default:request.reviewer.email }}
+                                op {{ request.reviewed_at|date:"j F Y H:i" }}
+                              </span>
+                            {% endif %}
+                          </div>
+                          <p class="mb-1">Aangevraagd door: {{ request.requester.get_full_name|default:request.requester.email }}</p>
+                          {% if request.request_comment %}
+                            <p class="mb-1"><strong>Toelichting aanvrager:</strong></p>
+                            <p class="mb-1 text-muted">{{ request.request_comment|linebreaks }}</p>
+                          {% endif %}
+                          
+                          <!-- Details van groepsgoedkeuringen -->
+                          {% for group_approval in request.group_approvals.all %}
+                            {% if group_approval.status != 'PENDING' and group_approval.review_comment %}
+                              <p class="mb-1"><strong>Opmerkingen van {{ group_approval.group.name }}:</strong></p>
+                              <p class="mb-1 text-muted">{{ group_approval.review_comment|linebreaks }}</p>
+                            {% endif %}
+                          {% endfor %}
+                          
+                          {% if request.review_comment %}
+                            <p class="mb-1"><strong>Opmerkingen beoordelaar:</strong></p>
+                            <p class="mb-0 text-muted">{{ request.review_comment|linebreaks }}</p>
+                          {% endif %}
+                        </div>
+                        <small class="text-muted">{{ request.created_at|date:"j F Y H:i" }}</small>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div class="card-footer">
+                  <a href="{% url 'approvals:request_detail' group.requests.0.pk %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-eye"></i> Details bekijken
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      {% if is_paginated %}
+        <nav aria-label="Paginering" class="mt-4">
+          <ul class="pagination pagination-sm justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if current_tab %}tab={{ current_tab }}&{% endif %}page=1" aria-label="Eerste">
+                  <i class="bi bi-chevron-double-left"></i>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?{% if current_tab %}tab={{ current_tab }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Vorige">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+              <span class="page-link">
+                Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}
+              </span>
+            </li>
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if current_tab %}tab={{ current_tab }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Volgende">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?{% if current_tab %}tab={{ current_tab }}&{% endif %}page={{ page_obj.paginator.num_pages }}" aria-label="Laatste">
+                  <i class="bi bi-chevron-double-right"></i>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="text-center text-muted py-5">
+        {% if current_tab == 'pending' %}
+          <i class="bi bi-inbox h1 d-block mb-3"></i>
+          <p>Er zijn momenteel geen verzoeken die op goedkeuring wachten.</p>
+        {% else %}
+          <i class="bi bi-clock-history h1 d-block mb-3"></i>
+          <p>Er zijn nog geen beoordeelde verzoeken.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

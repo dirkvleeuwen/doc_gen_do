@@ -1,0 +1,396 @@
+{% extends 'approvals/base.html' %}
+{% load approval_tags %}
+
+{% block title %}Goedkeuringsverzoek: {{ request.submission.subject|truncatechars:30 }}{% endblock %}
+
+{% block approval_content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="h5 mb-1">{{ request.version.instrument }} - {{ request.version.subject }}</h1>
+      <p class="approval-meta mb-0">
+        Aangevraagd door {{ request.requester.get_full_name|default:request.requester.email }}
+        <span class="mx-2">•</span>
+        {{ request.created_at|date:"j F Y H:i" }}
+      </p>
+    </div>
+    <span class="badge {% if request.status == 'PENDING' %}bg-warning
+          {% elif request.status == 'APPROVED' %}bg-success
+          {% else %}bg-danger{% endif %} status-badge">
+      {{ request.get_status_display }}
+    </span>
+  </div>
+  
+  <div class="card-body">
+    {% if request.request_comment %}
+      <div class="approval-comments mb-4">
+        <h6 class="mb-2">Toelichting van aanvrager:</h6>
+        {{ request.request_comment|linebreaks }}
+      </div>
+    {% endif %}
+
+    <!-- Groep-goedkeuringen status -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">Goedkeuringsstatus</h6>
+      </div>
+      <div class="card-body">
+        <h6>Vereiste groepsgoedkeuringen:</h6>
+        <ul class="list-group mb-3">
+          {% for group_approval in request.group_approvals.all %}
+          <li class="list-group-item {% if group_approval.status == 'APPROVED' %}list-group-item-success{% elif group_approval.status == 'REJECTED' %}list-group-item-danger{% endif %}">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ group_approval.group.name }}</strong>
+                <span class="badge 
+                  {% if group_approval.status == 'APPROVED' %}bg-success
+                  {% elif group_approval.status == 'REJECTED' %}bg-danger
+                  {% else %}bg-warning{% endif %}">
+                  {{ group_approval.get_status_display }}
+                </span>
+              </div>
+              {% if group_approval.reviewer %}
+              <div>
+                Laatste activiteit: {{ group_approval.reviewer.get_full_name|default:group_approval.reviewer.email }}
+                <small class="text-muted">{{ group_approval.reviewed_at|date:"j F Y H:i" }}</small>
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Toon per groepslid wie al heeft goedgekeurd -->
+            <div class="mt-2">
+              <p class="mb-1"><strong>Status per groepslid:</strong></p>
+              <div class="d-flex flex-wrap gap-2 mt-1">
+                {% for member in group_approval.group.members.all %}
+                  {% if member == request.requester %}
+                    <span class="badge rounded-pill bg-info">
+                      <i class="bi bi-person-exclamation"></i> {{ member.get_full_name|default:member.email }} (aanvrager)
+                    </span>
+                  {% elif member in group_approval.approved_members.all %}
+                    <span class="badge rounded-pill bg-success">
+                      <i class="bi bi-person-check"></i> {{ member.get_full_name|default:member.email }}
+                    </span>
+                  {% elif member in group_approval.rejected_members.all %}
+                    <span class="badge rounded-pill bg-danger">
+                      <i class="bi bi-person-x"></i> {{ member.get_full_name|default:member.email }}
+                    </span>
+                  {% else %}
+                    <span class="badge rounded-pill bg-secondary">
+                      <i class="bi bi-person"></i> {{ member.get_full_name|default:member.email }}
+                    </span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              
+              <!-- Voortgangsbalk voor deze groep -->
+              <div class="progress mt-2" style="height: 8px;">
+                {% if group_approval.status == 'APPROVED' %}
+                  <!-- Als de groep is goedgekeurd, toon 100% -->
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                {% else %}
+                  {% with eligible_count=group_approval.group.members.count %}
+                    {% if request.requester in group_approval.group.members.all %}
+                      {% with eligible_count=eligible_count|add:"-1" %}
+                        <!-- Als de aanvrager lid is van de groep, tel alleen de andere leden mee -->
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% if eligible_count > 0 %}{% widthratio group_approval.approved_members.count eligible_count 100 %}{% else %}0{% endif %}%"></div>
+                        <small class="text-muted mt-1 d-block">
+                          {{ group_approval.approved_members.count }}/{{ eligible_count }} stemgerechtigde leden hebben goedgekeurd
+                        </small>
+                      {% endwith %}
+                    {% else %}
+                      <!-- Als de aanvrager geen lid is, tel alle leden mee -->
+                      <div class="progress-bar bg-success" role="progressbar" 
+                           style="width: {% if eligible_count > 0 %}{% widthratio group_approval.approved_members.count eligible_count 100 %}{% else %}0{% endif %}%"></div>
+                      <small class="text-muted mt-1 d-block">
+                        {{ group_approval.approved_members.count }}/{{ eligible_count }} leden hebben goedgekeurd
+                      </small>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              </div>
+              
+            {% if group_approval.review_comment %}
+            <p class="mt-2 mb-0 text-muted">{{ group_approval.review_comment|linebreaks }}</p>
+            {% endif %}
+          </li>
+          {% empty %}
+          <li class="list-group-item">Geen groepsgoedkeuringen ingesteld.</li>
+          {% endfor %}
+        </ul>
+
+        <!-- De tweede voortgangsbalk is hier verwijderd -->
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">Versie op moment van aanvraag</h6>
+      </div>
+      <div class="card-body">
+        {# Show the formatted preview #}
+        <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap; font-size: 0.85rem;">{{ preview }}</pre>
+
+        {# Add preview button that opens in offcanvas for better viewing #}
+        <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPreview" aria-controls="offcanvasPreview">
+          <i class="bi bi-eye"></i> Bekijk in volledig scherm
+        </button>
+      </div>
+    </div>
+
+    {# Approval History Section - Show ALL requests for this submission #}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Goedkeuringsgeschiedenis</h6>
+        <button id="compareButton" class="btn btn-sm btn-outline-primary" disabled>
+          <i class="bi bi-collection"></i> Vergelijk geselecteerde versies
+        </button>
+      </div>
+      <div class="list-group list-group-flush">
+        <form id="versionCompareForm" method="GET" action="{% url 'approvals:compare_versions' %}">
+          {% for approval_request in request.submission.approval_requests.all|dictsortreversed:"created_at" %}
+          <div class="list-group-item {% if approval_request.pk == request.pk %}bg-light{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="d-flex align-items-center gap-3">
+                {% if approval_request.version %}
+                <div class="form-check">
+                  <input class="form-check-input version-checkbox" type="checkbox" 
+                         name="versions" value="{{ approval_request.pk }}" 
+                         id="version{{ approval_request.pk }}">
+                  <label class="form-check-label" for="version{{ approval_request.pk }}">
+                    <span class="visually-hidden">Selecteer versie</span>
+                  </label>
+                </div>
+                {% endif %}
+                <div>
+                  <h6 class="mb-1">
+                    <span class="badge {% if approval_request.status == 'PENDING' %}bg-warning
+                          {% elif approval_request.status == 'APPROVED' %}bg-success
+                          {% else %}bg-danger{% endif %}">
+                        {{ approval_request.get_status_display }}
+                    </span>
+                    {% if approval_request.pk == request.pk %}
+                      <small class="text-muted ms-2">(huidig verzoek)</small>
+                    {% endif %}
+                  </h6>
+                  <p class="mb-1">Aangevraagd door: {{ approval_request.requester.get_full_name|default:approval_request.requester.email }}</p>
+                  {% if approval_request.request_comment %}
+                    <p class="mb-1"><strong>Toelichting van aanvrager:</strong></p>
+                    <p class="mb-1 text-muted">{{ approval_request.request_comment|linebreaks }}</p>
+                  {% endif %}
+                  
+                  <!-- Gedetailleerde historie van goedkeuringen -->
+                  <div class="mt-3">
+                    <h6 class="text-muted mb-2">Activiteitenlog:</h6>
+                    <div class="timeline">
+                      {% for log in approval_request.logs.all %}
+                        <div class="timeline-item mb-2 ps-3 border-start {% if 'approved' in log.action %}border-success{% elif 'rejected' in log.action %}border-danger{% else %}border-secondary{% endif %}">
+                          <div class="d-flex align-items-center">
+                            <span class="badge rounded-pill {% if 'approved' in log.action %}bg-success{% elif 'rejected' in log.action %}bg-danger{% elif 'submitted' in log.action %}bg-primary{% else %}bg-secondary{% endif %} me-2">
+                              {% if 'approved' in log.action %}
+                                <i class="bi bi-check-circle-fill"></i> Goedgekeurd
+                              {% elif 'rejected' in log.action %}
+                                <i class="bi bi-x-circle-fill"></i> Afgekeurd
+                              {% elif 'submitted' in log.action %}
+                                <i class="bi bi-send-fill"></i> Ingediend
+                              {% else %}
+                                <i class="bi bi-info-circle-fill"></i> {{ log.action }}
+                              {% endif %}
+                            </span>
+                            <span>
+                              door <strong>{{ log.user.get_full_name|default:log.user.email }}</strong>
+                              {% if 'member_of_' in log.action %}
+                                ({{ log.action|cut:"approved_as_member_of_"|cut:"rejected_as_member_of_" }})
+                              {% endif %}
+                            </span>
+                            <small class="text-muted ms-2">{{ log.timestamp|date:"j F Y H:i" }}</small>
+                          </div>
+                          {% if log.comment %}
+                            <p class="mb-0 mt-1 small text-muted">{{ log.comment|linebreaks }}</p>
+                          {% endif %}
+                        </div>
+                      {% empty %}
+                        <p class="text-muted">Geen activiteitenlog beschikbaar voor dit verzoek.</p>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  
+                  {% if approval_request.version %}
+                    <div class="mt-2">
+                      <button type="button" class="btn btn-sm btn-outline-secondary" 
+                              data-bs-toggle="offcanvas" 
+                              data-bs-target="#offcanvasPreview{{ approval_request.pk }}" 
+                              aria-controls="offcanvasPreview{{ approval_request.pk }}">
+                        <i class="bi bi-eye"></i> Bekijk versie
+                      </button>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <small class="text-muted">{{ approval_request.created_at|date:"j F Y H:i" }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+
+    {% if request.status == 'PENDING' and perms.approvals.can_review_submissions %}
+      <!-- Aangepaste beoordeling voor groepsgebaseerd goedkeuren -->
+      {% if request.requester != user %}
+        <!-- Check of er groepen zijn waarbij de gebruiker lid is en die nog een beoordeling moeten geven -->
+        {% with can_review=False %}
+          {% for group_approval in request.group_approvals.all %}
+            {% if group_approval.status == 'PENDING' %}
+              {% for member in group_approval.group.members.all %}
+                {% if member == user %}
+                  <!-- Gebruiker mag beoordelen, toon het beoordelingsformulier -->
+                  <div class="card">
+                    <div class="card-header">
+                      <h6 class="mb-0">Beoordeling namens jouw groep</h6>
+                    </div>
+                    <div class="card-body">
+                      <p>
+                        Je kunt dit verzoek beoordelen namens de volgende groep(en):
+                        {% for ga in request.group_approvals.all %}
+                          {% if ga.status == 'PENDING' %}
+                            {% for m in ga.group.members.all %}
+                              {% if m == user %}
+                                <span class="badge bg-info">{{ ga.group.name }}</span>
+                              {% endif %}
+                            {% endfor %}
+                          {% endif %}
+                        {% endfor %}
+                      </p>
+                      
+                      <div class="row">
+                        <div class="col-md-6">
+                          <form method="post" action="{% url 'approvals:approve_request' request.pk %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                              <label for="approve_comment" class="form-label">Opmerkingen bij goedkeuring</label>
+                              <textarea class="form-control" id="approve_comment" name="comment" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                              <i class="bi bi-check-lg"></i> Goedkeuren
+                            </button>
+                          </form>
+                        </div>
+                        <div class="col-md-6">
+                          <form method="post" action="{% url 'approvals:reject_request' request.pk %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                              <label for="reject_comment" class="form-label">Reden voor afwijzing</label>
+                              <textarea class="form-control" id="reject_comment" name="comment" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger">
+                              <i class="bi bi-x-lg"></i> Afwijzen
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {% with can_review=True %}{% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          
+          {% if request.group_approvals.count == 0 %}
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Er zijn geen groepen ingesteld om dit verzoek te beoordelen.
+            </div>
+          {% elif not can_review %}
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Je bent geen lid van een groep die dit verzoek nog moet goedkeuren, of je groep heeft al een beoordeling gegeven.
+            </div>
+          {% endif %}
+        {% endwith %}
+      {% else %}
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Je kunt niet je eigen verzoek beoordelen.
+        </div>
+      {% endif %}
+    {% elif request.status == 'PENDING' %}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Je goedkeuringsverzoek is in behandeling. Je ontvangt bericht zodra deze is beoordeeld.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{# Add offcanvas for fullscreen preview #}
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasPreview" aria-labelledby="offcanvasPreviewLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasPreviewLabel">
+      <i class="bi bi-eye me-1"></i> Preview
+    </h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Sluiten"></button>
+  </div>
+  <div class="offcanvas-body">
+    <pre class="bg-light p-3 border rounded mb-4" style="white-space: pre-wrap; font-size: 0.85rem;">{{ preview }}</pre>
+  </div>
+</div>
+
+{# Add offcanvas components for each historical version #}
+{% for approval_request in request.submission.approval_requests.all %}
+  {% if approval_request.version %}
+    <div class="offcanvas offcanvas-start" tabindex="-1" 
+         id="offcanvasPreview{{ approval_request.pk }}" 
+         aria-labelledby="offcanvasPreviewLabel{{ approval_request.pk }}">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasPreviewLabel{{ approval_request.pk }}">
+          <i class="bi bi-eye me-1"></i> Preview van versie {{ approval_request.created_at|date:"j F Y H:i" }}
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Sluiten"></button>
+      </div>
+      <div class="offcanvas-body">
+        <pre class="bg-light p-3 border rounded mb-4" style="white-space: pre-wrap; font-size: 0.85rem;">{{ version_previews|get_item:approval_request.pk }}</pre>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
+<div class="mt-3">
+  <a href="{% url 'approvals:dashboard' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Terug naar overzicht
+  </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.version-checkbox');
+    const compareButton = document.getElementById('compareButton');
+    const form = document.getElementById('versionCompareForm');
+
+    function updateCompareButton() {
+        const checkedBoxes = document.querySelectorAll('.version-checkbox:checked');
+        if (checkedBoxes.length === 2) {
+            compareButton.disabled = false;
+        } else {
+            compareButton.disabled = true;
+        }
+    }
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateCompareButton);
+    });
+
+    compareButton.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.version-checkbox:checked');
+        if (checkedBoxes.length === 2) {
+            form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

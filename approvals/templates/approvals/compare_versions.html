@@ -1,0 +1,124 @@
+{% extends 'approvals/base.html' %}
+{% load approval_tags %}
+
+{% block title %}Vergelijk versies: {{ submission.subject|truncatechars:30 }}{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<style>
+.diff-added {
+    background-color: #e6ffe6;
+    color: #006600;
+}
+.diff-removed {
+    background-color: #ffe6e6;
+    color: #cc0000;
+}
+.diff-unchanged {
+    color: #666;
+}
+.diff-line {
+    padding: 2px 5px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+</style>
+{% endblock %}
+
+{% block approval_content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'approvals:dashboard' %}">Goedkeuringen</a></li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'approvals:request_detail' version1.request.pk %}">{{ submission.subject|truncatechars:30 }}</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Vergelijk versies</li>
+  </ol>
+</nav>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          Versie van {{ version1.request.created_at|date:"j F Y H:i" }}
+          <span class="badge {% if version1.request.status == 'PENDING' %}bg-warning
+                {% elif version1.request.status == 'APPROVED' %}bg-success
+                {% else %}bg-danger{% endif %} ms-2">
+            {{ version1.request.get_status_display }}
+          </span>
+        </h5>
+        <p class="text-muted small mb-0">
+          Aangevraagd door {{ version1.request.requester.get_full_name|default:version1.request.requester.email }}
+        </p>
+      </div>
+      <div class="card-body">
+        <div class="bg-light p-3 border rounded">
+          {% with diff_lines=version1.preview|generate_diff_lines:version2.preview %}
+            {% for type, line in diff_lines %}
+              {% if type == 'removed' or type == 'unchanged' %}
+                <div class="diff-line diff-{{ type }}">{{ line }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          Versie van {{ version2.request.created_at|date:"j F Y H:i" }}
+          <span class="badge {% if version2.request.status == 'PENDING' %}bg-warning
+                {% elif version2.request.status == 'APPROVED' %}bg-success
+                {% else %}bg-danger{% endif %} ms-2">
+            {{ version2.request.get_status_display }}
+          </span>
+        </h5>
+        <p class="text-muted small mb-0">
+          Aangevraagd door {{ version2.request.requester.get_full_name|default:version2.request.requester.email }}
+        </p>
+      </div>
+      <div class="card-body">
+        <div class="bg-light p-3 border rounded">
+          {% with diff_lines=version1.preview|generate_diff_lines:version2.preview %}
+            {% for type, line in diff_lines %}
+              {% if type == 'added' or type == 'unchanged' %}
+                <div class="diff-line diff-{{ type }}">{{ line }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-3">
+  <a href="{% url 'approvals:request_detail' version1.request.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Terug naar goedkeuringsverzoek
+  </a>
+</div>
+
+<div class="mt-3 card">
+  <div class="card-header">
+    <h6 class="mb-0">Legenda</h6>
+  </div>
+  <div class="card-body">
+    <div class="d-flex gap-3">
+      <div>
+        <span class="diff-line diff-removed">Verwijderde tekst</span>
+      </div>
+      <div>
+        <span class="diff-line diff-added">Toegevoegde tekst</span>
+      </div>
+      <div>
+        <span class="diff-line diff-unchanged">Ongewijzigde tekst</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<p>Beste {{ user.get_full_name|default:user.email }},</p>
+
+<p>Het status van uw goedkeuringsverzoek is bijgewerkt.</p>
+
+<h3>Details van het verzoek:</h3>
+<ul>
+    <li><strong>Instrument:</strong> {{ submission.instrument }}</li>
+    <li><strong>Onderwerp:</strong> {{ submission.subject }}</li>
+    <li><strong>Status:</strong> {{ request.get_status_display }}</li>
+    {% if request.reviewer %}
+    <li><strong>Beoordeeld door:</strong> {{ request.reviewer.get_full_name|default:request.reviewer.email }}</li>
+    {% else %}
+    <li><strong>Beoordeeld door:</strong> Meerdere gebruikers (groepsgoedkeuring)</li>
+    {% endif %}
+    {% if request.reviewed_at %}
+    <li><strong>Beoordeeld op:</strong> {{ request.reviewed_at|date:"j F Y H:i" }}</li>
+    {% endif %}
+</ul>
+
+{% if request.review_comment %}
+<p><strong>Toelichting van de beoordelaar:</strong></p>
+<p>{{ request.review_comment|linebreaks }}</p>
+{% elif request.comments %}
+<p><strong>Toelichting van de beoordelaar:</strong></p>
+<p>{{ request.comments|linebreaks }}</p>
+{% endif %}
+
+<p>U kunt de details van het verzoek bekijken via onderstaande link:</p>
+
+<p><a href="{{ site_url }}{% url 'approvals:request_detail' request.pk %}" class="button">Details bekijken</a></p>
+
+<p>Met vriendelijke groet,<br>
+Document Generator</p>
+{% endblock %}

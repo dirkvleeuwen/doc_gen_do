@@ -127,6 +127,9 @@
                       {% if sort == 'updated_at' %}<i class="bi bi-arrow-up ms-1"></i>{% elif sort == 'updated_at_desc' %}<i class="bi bi-arrow-down ms-1"></i>{% endif %}
                     </a>
                   </th>
+                  {% if approvals_enabled %}
+                  <th class="fw-semibold text-dark">Status</th>
+                  {% endif %}
                   <th class="fw-semibold text-dark">Indieners</th>
                   <th class="fw-semibold text-dark">Acties</th>
                   {% endwith %}
@@ -162,6 +165,21 @@
                       {% endlanguage %}
                     </td>
                     <td>{% language 'nl' %}{{ submission.updated_at|date:"j F Y H:i" }}{% endlanguage %}</td>
+                    {% if approvals_enabled %}
+                    <td>
+                      {% if submission.approval_requests.exists %}
+                        {% with latest_request=submission.approval_requests.latest %}
+                          <span class="badge {% if latest_request.status == 'PENDING' %}bg-warning
+                                {% elif latest_request.status == 'APPROVED' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                              {{ latest_request.get_status_display }}
+                          </span>
+                        {% endwith %}
+                      {% else %}
+                        <span class="badge text-bg-secondary">Niet aangevraagd</span>
+                      {% endif %}
+                    </td>
+                    {% endif %}
                     <td>
                       {% with submitters=submission.submitters.all %}
                       <span class="badge text-bg-secondary rounded-pill">{{ submitters|length }}</span> {# rounded-pill #}
@@ -347,7 +365,24 @@
               {% endwith %}
             </div>
 
-            {# 3e regel: acties #}
+            {# 3e regel: status #}
+            {% if approvals_enabled %}
+            <div class="mt-2">
+              {% if submission.approval_requests.exists %}
+                {% with latest_request=submission.approval_requests.latest %}
+                  <span class="badge {% if latest_request.status == 'PENDING' %}bg-warning
+                        {% elif latest_request.status == 'APPROVED' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                      {{ latest_request.get_status_display }}
+                  </span>
+                {% endwith %}
+              {% else %}
+                <span class="badge text-bg-secondary">Niet aangevraagd</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {# 4e regel: acties #}
             <div class="btn-group btn-group-sm mt-2" role="group">
               <a href="{% url 'instrument_submission_edit' submission.pk %}"
                  class="btn btn-sm btn-outline-secondary" title="Bewerken">

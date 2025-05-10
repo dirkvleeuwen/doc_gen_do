@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Beoordeel Goedkeuringsverzoek{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Beoordeel Goedkeuringsverzoek</h2>
+                    <span class="badge bg-warning">{{ approval_request.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="h5 mb-3">{{ approval_request.submission.instrument }} - {{ approval_request.submission.subject }}</h3>
+                    
+                    <dl class="row mb-4">
+                        <dt class="col-sm-3">Aanvrager</dt>
+                        <dd class="col-sm-9">{{ approval_request.requester.get_full_name|default:approval_request.requester.email }}</dd>
+                        
+                        <dt class="col-sm-3">Ingediend op</dt>
+                        <dd class="col-sm-9">{{ approval_request.created_at|date:"j F Y H:i" }}</dd>
+                        
+                        {% if approval_request.comment %}
+                        <dt class="col-sm-3">Toelichting aanvrager</dt>
+                        <dd class="col-sm-9">{{ approval_request.comment|linebreaks }}</dd>
+                        {% endif %}
+                    </dl>
+
+                    <div class="border rounded p-3 bg-light mb-4">
+                        <h4 class="h6 mb-3">Document Preview</h4>
+                        {{ approval_request.submission.preview|linebreaks }}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form.visible_fields %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                            </label>
+                            {% render_field field class="form-control" %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ field.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'approvals:request_detail' approval_request.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Terug
+                            </a>
+                            <div class="btn-group">
+                                <button type="submit" name="status" value="approved" class="btn btn-success">
+                                    <i class="bi bi-check-lg"></i> Goedkeuren
+                                </button>
+                                <button type="submit" name="status" value="rejected" class="btn btn-danger">
+                                    <i class="bi bi-x-lg"></i> Afwijzen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="h6 mb-0">Beoordeling</h2>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <form method="post" action="{% url 'approvals:approve_request' approval_request.pk %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="approve_comment" class="form-label">Opmerkingen bij goedkeuring</label>
+            <textarea class="form-control" id="approve_comment" name="comment" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> Goedkeuren
+          </button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <form method="post" action="{% url 'approvals:reject_request' approval_request.pk %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="reject_comment" class="form-label">Reden voor afwijzing</label>
+            <textarea class="form-control" id="reject_comment" name="comment" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-x-lg"></i> Afwijzen
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

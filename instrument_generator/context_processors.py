@@ -7,3 +7,7 @@ def sqlite_mode(request):
         and settings.DATABASES["default"]["ENGINE"].endswith("sqlite3")
     )
     return {"sqlite_mode": using_sqlite}
+
+def approvals_enabled(request):
+    """Maakt de approvals status beschikbaar in templates."""
+    return {"approvals_enabled": settings.ENABLE_APPROVALS}
